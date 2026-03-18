@@ -1,0 +1,39 @@
+name: Sync file da OneDrive
+
+on:
+  schedule:
+    # Ogni giorno alle 06:00 (ora italiana = 05:00 UTC)
+    - cron: '0 5 * * *'
+  workflow_dispatch:  # permette avvio manuale dal sito GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Scarica file da OneDrive
+        run: |
+          curl -L \
+            "https://api.onedrive.com/v1.0/shares/dSFodHRwczovLzFkcnYubXMveC9jLzlkNTg3MzczYjg2YTVjZDAvSVFDRm1WckZnWDVvVGFvZjZYeDZYSjFqQWVTX0k5c3hjeDNHMlhJdU8tLXN3dGc_ZT1XZHNuRFY/root/content" \
+            -o dati.xlsx \
+            --max-time 30 \
+            --fail
+
+      - name: Verifica file scaricato
+        run: |
+          ls -lh dati.xlsx
+          echo "File scaricato con successo"
+
+      - name: Commit e push se ci sono modifiche
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add dati.xlsx
+          if git diff --staged --quiet; then
+            echo "Nessuna modifica al file, skip commit"
+          else
+            git commit -m "Aggiornamento automatico dati $(date '+%d/%m/%Y %H:%M')"
+            git push
+          fi
