@@ -208,9 +208,9 @@ tr.rH{background:rgba(88,166,255,.03)}
         <span id="upsub">.xlsm / .xlsx — trascina o clicca</span>
       </div>
     </label>
-    <button class="gdrive-btn" id="gdrive-btn" onclick="loadFromDrive()">
+    <button class="gdrive-btn" id="gdrive-btn" onclick="loadFromOneDrive()">
       <svg width="18" height="18" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
-      <span id="gdrive-label">Aggiorna da Drive</span>
+      <span id="gdrive-label">Aggiorna da OneDrive</span>
     </button>
   </div>
   <input type="file" id="fi" accept=".xlsx,.xlsm,.xls">
@@ -454,60 +454,174 @@ function load(file) {
 }
 
 // ══════════════════════════════════════════════════════
-//  GOOGLE DRIVE AUTO-LOAD
+//  ONEDRIVE AUTO-LOAD
+//  Uses the OneDrive Shares API — no proxy, no CORS issues
 // ══════════════════════════════════════════════════════
-const DRIVE_FILE_ID = '15Z9bAWvIwLjMQBLK3TwcA-JR0Qgw_C_6';
-const DRIVE_URL = `https://drive.google.com/uc?export=download&id=${DRIVE_FILE_ID}`;
-const CORS_PROXY = `https://corsproxy.io/?${encodeURIComponent(DRIVE_URL)}`;
+
+// This URL is generated from the public share link via base64url encoding.
+// It works as long as the OneDrive file is shared as "Anyone with the link".
+const ONEDRIVE_URL = 'https://api.onedrive.com/v1.0/shares/dSFodHRwczovLzFkcnYubXMveC9jLzlkNTg3MzczYjg2YTVjZDAvSVFDRm1WckZnWDVvVGFvZjZYeDZYSjFqQWVTX0k5c3hjeDNHMlhJdU8tLXN3dGc_ZT1XZHNuRFY/root/content';
+
+// Fallback: the file hosted in the same GitHub Pages repo
+const GITHUB_URL = 'dati.xlsx';
+
+async function fetchWithTimeout(url, ms = 15000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    return r;
+  } catch(e) { clearTimeout(t); throw e; }
+}
+
+async function loadFromOneDrive() {
+  const btn = document.getElementById('gdrive-btn');
+  const lbl = document.getElementById('gdrive-label');
+  const dbg = document.getElementById('dbg');
+  btn.classList.add('loading');
+  lbl.textContent = 'Scaricando…';
+  dbg.style.display = 'none';
+
+  // Try OneDrive first, then GitHub fallback
+  const sources = [
+    { url: ONEDRIVE_URL, name: 'OneDrive' },
+    { url: GITHUB_URL,   name: 'GitHub'   },
+  ];
+
+  for (const src of sources) {
+    try {
+      lbl.textContent = `Da ${src.name}…`;
+      console.log('Trying:', src.name, src.url);
+      const res = await fetchWithTimeout(src.url, 15000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength < 5000) throw new Error('File troppo piccolo');
+
+      const wb = XLSX.read(buf, { type:'array', cellDates:true });
+      D = parse(wb);
+      D._sheetNames = wb.SheetNames;
+      D.energia = parseEnergia(wb);
+      SEL = D.years[D.years.length - 1];
+
+      document.getElementById('upic').textContent = '✅';
+      document.getElementById('uptitle').textContent = 'Piano Risparmi';
+      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
+      document.getElementById('dz').classList.add('ok');
+      document.getElementById('h-sub').textContent = `Dati aggiornati da ${src.name} · Anni: ${D.years.join(', ')}`;
+
+      btn.classList.remove('loading');
+      btn.classList.add('ok');
+      lbl.textContent = `✅ ${src.name}`;
+      setTimeout(() => { lbl.textContent = 'Aggiorna'; btn.classList.remove('ok'); }, 3000);
+
+      render();
+      renderEnergia();
+      return;
+
+    } catch(err) {
+      console.warn(src.name, 'failed:', err.message);
+    }
+  }
+
+  // All failed
+  btn.classList.remove('loading');
+  lbl.textContent = 'Aggiorna';
+  dbg.style.display = 'block';
+  dbg.textContent = `❌ Caricamento automatico non riuscito.\n\nUsa il pulsante 📂 per caricare il file manualmente.\n\nSe vuoi il caricamento automatico, assicurati che il file OneDrive sia condiviso come "Chiunque abbia il link".`;
+}
+
+// Auto-load on page open
+window.addEventListener('load', () => setTimeout(loadFromOneDrive, 600));
+
+
+
+// Multiple download strategies — tries each until one works
+function getDriveURLs() {
+  const id = DRIVE_FILE_ID;
+  const direct = `https://drive.google.com/uc?export=download&id=${id}&confirm=t`;
+  return [
+    // Strategy 1: corsproxy.io
+    `https://corsproxy.io/?${encodeURIComponent(direct)}`,
+    // Strategy 2: allorigins
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(direct)}`,
+    // Strategy 3: cors.sh
+    `https://cors.sh/${direct}`,
+    // Strategy 4: thingproxy
+    `https://thingproxy.freeboard.io/fetch/${direct}`,
+  ];
+}
+
+async function fetchWithTimeout(url, timeoutMs = 12000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    return res;
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
 
 async function loadFromDrive() {
   const btn = document.getElementById('gdrive-btn');
   const lbl = document.getElementById('gdrive-label');
+  const dbg = document.getElementById('dbg');
   btn.classList.add('loading');
   lbl.textContent = 'Scaricando…';
+  dbg.style.display = 'none';
 
-  try {
-    const res = await fetch(CORS_PROXY);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const buf = await res.arrayBuffer();
+  const urls = getDriveURLs();
+  let lastError = null;
 
-    // Process exactly like a manual file upload
-    const wb = XLSX.read(buf, { type:'array', cellDates:true });
-    D = parse(wb);
-    D._sheetNames = wb.SheetNames;
-    D.energia = parseEnergia(wb);
-    SEL = D.years[D.years.length - 1];
+  for (let i = 0; i < urls.length; i++) {
+    lbl.textContent = `Tentativo ${i+1}/${urls.length}…`;
+    try {
+      console.log(`Trying proxy ${i+1}:`, urls[i]);
+      const res = await fetchWithTimeout(urls[i], 15000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength < 1000) throw new Error('File troppo piccolo, risposta non valida');
 
-    // Update UI
-    document.getElementById('upic').textContent = '✅';
-    document.getElementById('uptitle').textContent = 'Piano Risparmi.xlsm';
-    document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
-    document.getElementById('dz').classList.add('ok');
-    document.getElementById('h-sub').textContent = `Dati caricati da Google Drive · Anni: ${D.years.join(', ')}`;
+      // Success — parse and render
+      const wb = XLSX.read(buf, { type:'array', cellDates:true });
+      D = parse(wb);
+      D._sheetNames = wb.SheetNames;
+      D.energia = parseEnergia(wb);
+      SEL = D.years[D.years.length - 1];
 
-    btn.classList.remove('loading');
-    btn.classList.add('ok');
-    lbl.textContent = '✅ Aggiornato';
-    setTimeout(() => { lbl.textContent = 'Aggiorna da Drive'; btn.classList.remove('ok'); }, 3000);
+      document.getElementById('upic').textContent = '✅';
+      document.getElementById('uptitle').textContent = 'Piano Risparmi.xlsm';
+      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
+      document.getElementById('dz').classList.add('ok');
+      document.getElementById('h-sub').textContent = `Dati caricati da Google Drive · Anni: ${D.years.join(', ')}`;
 
-    render();
-    renderEnergia();
+      btn.classList.remove('loading');
+      btn.classList.add('ok');
+      lbl.textContent = '✅ Aggiornato';
+      setTimeout(() => { lbl.textContent = 'Aggiorna da Drive'; btn.classList.remove('ok'); }, 3000);
 
-  } catch(err) {
-    btn.classList.remove('loading');
-    lbl.textContent = 'Aggiorna da Drive';
-    // Show error in debug box
-    const dbg = document.getElementById('dbg');
-    dbg.style.display = 'block';
-    dbg.textContent = `❌ Errore caricamento da Drive: ${err.message}\n\nSe il problema persiste, carica il file manualmente con il pulsante 📂`;
-    console.error('Drive load error:', err);
+      render();
+      renderEnergia();
+      return; // Done!
+
+    } catch(err) {
+      console.warn(`Proxy ${i+1} failed:`, err.message);
+      lastError = err;
+    }
   }
+
+  // All proxies failed
+  btn.classList.remove('loading');
+  lbl.textContent = 'Aggiorna da Drive';
+  dbg.style.display = 'block';
+  dbg.textContent = `❌ Impossibile caricare da Google Drive automaticamente.\n\nErrore: ${lastError?.message}\n\n⚠️ Verifica che il file sia condiviso pubblicamente:\nGoogle Drive → tasto destro → Condividi → "Chiunque abbia il link" → Visualizzatore\n\nAlternativa: usa il pulsante 📂 per caricare il file manualmente.`;
 }
 
-// Auto-load from Drive on page open (after 500ms to let page render)
-window.addEventListener('load', () => {
-  setTimeout(loadFromDrive, 500);
-});
+// Auto-load on page open
+window.addEventListener('load', () => setTimeout(loadFromDrive, 800));
 
 
 //  Structure verified against the actual file:
