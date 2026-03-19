@@ -17,8 +17,7 @@ jobs:
 
       - name: Scarica file da OneDrive
         run: |
-          API_URL="https://api.onedrive.com/v1.0/shares/dSFodHRwczovLzFkcnYubXMveC9jLzlkNTg3MzczYjg2YTVjZDAvSVFER3dHRldJX1JFVHFTTV9NeVZDVTlVQVhfaWJsU2h3U0pSYVVfbVJ1S0QxVk0_ZT12cDdVSGE/root/content"
-          
+          API_URL="https://api.onedrive.com/v1.0/shares/dSFodHRwczovLzFkcnYubXMveC9jLzlkNTg3MzczYjg2YTVjZDAvSVFER3dHRldJX1JFVHFTTV9NeVZDVTlVQVhfaWJsU2h3U0pSYVVfbVJ1S0QxVk0_ZT1BNzJKaXU/root/content"
           echo "Download da OneDrive API..."
           HTTP_CODE=$(curl -L "${API_URL}" \
             -o dati.xlsx \
@@ -26,7 +25,6 @@ jobs:
             --retry 3 \
             --retry-delay 5 \
             -w "%{http_code}" -s)
-          
           echo "HTTP: ${HTTP_CODE}"
           if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
             FILE_SIZE=$(wc -c < dati.xlsx)
@@ -52,4 +50,3 @@ jobs:
             git commit -m "Aggiornamento dati $(date '+%d/%m/%Y %H:%M')"
             git push
           fi
-
