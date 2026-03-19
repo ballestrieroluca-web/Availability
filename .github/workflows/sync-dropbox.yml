@@ -41,14 +41,11 @@ jobs:
             exit 1
           fi
  
-      - name: Commit e push se modificato
+      - name: Commit e push
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add dati.xlsx
-          if git diff --staged --quiet; then
-            echo "Nessuna modifica, skip"
-          else
-            git commit -m "Aggiornamento dati $(date '+%d/%m/%Y %H:%M')"
-            git push --force-with-lease origin main
-          fi
+          # Forza sempre il commit con timestamp così è sempre "nuovo"
+          git commit --allow-empty -m "Aggiornamento dati $(date '+%d/%m/%Y %H:%M')"
+          git push --force-with-lease origin main
