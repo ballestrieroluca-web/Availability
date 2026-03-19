@@ -2,38 +2,54 @@ name: Sync file da OneDrive
 
 on:
   schedule:
-    # Ogni giorno alle 06:00 (ora italiana = 05:00 UTC)
     - cron: '0 5 * * *'
-  workflow_dispatch:  # permette avvio manuale dal sito GitHub
+  workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Scarica file da OneDrive
         run: |
-          curl -L \
-            "https://api.onedrive.com/v1.0/shares/dSFodHRwczovLzFkcnYubXMveC9jLzlkNTg3MzczYjg2YTVjZDAvSVFDRm1WckZnWDVvVGFvZjZYeDZYSjFqQWVTX0k5c3hjeDNHMlhJdU8tLXN3dGc_ZT1XZHNuRFY/root/content" \
+          API_URL="https://api.onedrive.com/v1.0/shares/dSFodHRwczovLzFkcnYubXMveC9jLzlkNTg3MzczYjg2YTVjZDAvSVFER3dHRldJX1JFVHFTTV9NeVZDVTlVQVhfaWJsU2h3U0pSYVVfbVJ1S0QxVk0_ZT12cDdVSGE/root/content"
+          
+          echo "Download da OneDrive API..."
+          HTTP_CODE=$(curl -L "${API_URL}" \
             -o dati.xlsx \
-            --max-time 30 \
-            --fail
+            --max-time 60 \
+            --retry 3 \
+            --retry-delay 5 \
+            -w "%{http_code}" -s)
+          
+          echo "HTTP: ${HTTP_CODE}"
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            FILE_SIZE=$(wc -c < dati.xlsx)
+            echo "✅ Download riuscito — ${FILE_SIZE} bytes"
+            if [ "$FILE_SIZE" -lt 5000 ]; then
+              echo "❌ File troppo piccolo"
+              cat dati.xlsx
+              exit 1
+            fi
+          else
+            echo "❌ Fallito (HTTP ${HTTP_CODE})"
+            exit 1
+          fi
 
-      - name: Verifica file scaricato
-        run: |
-          ls -lh dati.xlsx
-          echo "File scaricato con successo"
-
-      - name: Commit e push se ci sono modifiche
+      - name: Commit e push se modificato
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add dati.xlsx
           if git diff --staged --quiet; then
-            echo "Nessuna modifica al file, skip commit"
+            echo "Nessuna modifica, skip"
           else
-            git commit -m "Aggiornamento automatico dati $(date '+%d/%m/%Y %H:%M')"
+            git commit -m "Aggiornamento dati $(date '+%d/%m/%Y %H:%M')"
             git push
           fi
+
