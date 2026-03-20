@@ -18,10 +18,18 @@ jobs:
           fetch-depth: 0
           ref: main
  
-      - name: Scarica file da Dropbox
+      - name: Cancella dati.xlsx da GitHub
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git pull origin main --rebase
+          git rm -f dati.xlsx
+          git commit -m "Rimozione dati.xlsx $(date '+%d/%m/%Y %H:%M')"
+          git push origin main
+ 
+      - name: Scarica nuovo file da Dropbox
         run: |
           DROPBOX_URL="https://www.dropbox.com/scl/fi/4tngypsxhxyiiunq4fcsm/dati.xlsx?rlkey=xe3q06bklct4sqjsmxg93hsm8&st=1580uivv&dl=1"
-          rm -f dati.xlsx
           HTTP_CODE=$(curl -L "${DROPBOX_URL}" \
             -o dati.xlsx \
             --max-time 60 \
@@ -37,13 +45,9 @@ jobs:
             exit 1
           fi
  
-      - name: Commit e push
+      - name: Carica nuovo file su GitHub
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          # Rimuovi il file dal tracking git e riaggiungi — forza git a vederlo come nuovo
-          git rm --cached dati.xlsx 2>/dev/null || true
+          git pull origin main --rebase
           git add -f dati.xlsx
-          # --allow-empty garantisce il commit anche se git non vede differenze
-          git commit --allow-empty -m "Sync Dropbox $(date '+%d/%m/%Y %H:%M')"
-          git push --force-with-lease origin main
+          git commit -m "Aggiornamento dati $(date '+%d/%m/%Y %H:%M')"
+          git push origin main
