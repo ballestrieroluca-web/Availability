@@ -1,0 +1,3849 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Risparmi">
+<meta name="description" content="Dashboard personale per il controllo di spese, risparmi e consumi energetici">
+<title>Piano Risparmi — Dashboard</title>
+<link rel="manifest" id="pwa-manifest">
+<link rel="apple-touch-icon" id="pwa-icon-apple">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+:root {
+  --bg:     #0d1117;
+  --surf:   #161b22;
+  --surf2:  #1f2937;
+  --border: #30363d;
+  --blue:   #58a6ff;
+  --green:  #3fb950;
+  --orange: #f78166;
+  --purple: #bc8cff;
+  --yellow: #e3b341;
+  --red:    #ff7b72;  --text:   #e6edf3;
+  --muted:  #8b949e;
+  --faint:  #30363d;
+  --r:      12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 20% 0%,rgba(88,166,255,.06) 0%,transparent 70%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(63,185,80,.04) 0%,transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:0 28px 80px}
+
+/* HEADER */
+header{padding:36px 0 28px;display:flex;align-items:flex-end;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:28px}
+.h-title{font-family:'DM Sans',sans-serif;font-size:36px;letter-spacing:-1px;
+  background:linear-gradient(120deg,#fff 30%,var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.h-sub{color:var(--muted);font-size:12px;margin-top:5px;font-weight:300}
+
+/* UPLOAD */
+.upz{display:flex;align-items:center;gap:14px;border:1.5px dashed var(--border);border-radius:var(--r);
+  padding:14px 22px;cursor:pointer;background:var(--surf);transition:border-color .2s,background .2s;min-width:240px}
+.upz:hover,.upz.drag{border-color:var(--blue);background:rgba(88,166,255,.06)}
+.upz.ok{border-style:solid;border-color:var(--green)}
+.upz-ic{width:36px;height:36px;border-radius:8px;background:rgba(88,166,255,.12);
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.upz.ok .upz-ic{background:rgba(63,185,80,.12)}
+.upz-txt strong{display:block;font-size:13px;margin-bottom:2px}
+.upz-txt span{color:var(--muted);font-size:11px}
+#fi{display:none}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.tb-label{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-right:4px}
+.pill{padding:4px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surf);
+  color:var(--muted);cursor:pointer;font-size:12px;font-weight:500;transition:all .15s;font-family:'DM Sans',sans-serif}
+.pill:hover{border-color:var(--blue);color:var(--blue)}
+.pill.on{background:var(--blue);border-color:var(--blue);color:#0d1117;font-weight:700}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+.kpi{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px 18px 16px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.kpi.c0::after{background:linear-gradient(90deg,var(--blue),var(--purple))}
+.kpi.c1::after{background:linear-gradient(90deg,var(--green),var(--blue))}
+.kpi.c2::after{background:linear-gradient(90deg,var(--orange),var(--red))}
+.kpi.c3::after{background:linear-gradient(90deg,var(--purple),var(--blue))}
+.kpi.c4::after{background:linear-gradient(90deg,var(--yellow),var(--orange))}
+.kpi-lbl{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:10px;font-weight:500}
+.kpi-val{font-family:'DM Sans',sans-serif;font-size:26px;font-weight:600;letter-spacing:-.5px;line-height:1;margin-bottom:7px}
+.kpi-val.pos{color:var(--green)}.kpi-val.neg{color:var(--red)}.kpi-val.blu{color:var(--blue)}.kpi-val.ora{color:var(--orange)}.kpi-val.neu{color:var(--text)}
+.kpi-val.mar-pos{color:#f59e0b}.kpi-val.mar-neg{color:var(--red)}
+.kpi-val.sal{color:#22d3ee}
+.kpi-sub{font-size:11px;color:var(--muted)}
+.kpi-trend{font-size:11px;margin-top:4px}
+.kpi-trend.up{color:var(--green)}.kpi-trend.dn{color:var(--red)}
+
+/* SECTIONS */
+.sec{margin-bottom:28px}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sec-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);
+  display:flex;align-items:center;gap:8px}
+.sec-title::before{content:'';display:inline-block;width:3px;height:14px;border-radius:2px;background:var(--blue)}
+.sec-note{font-size:11px;color:var(--faint);font-style:italic}
+
+/* CHARTS */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
+.cc{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:20px}
+.cc.full{grid-column:1/-1}
+.cc-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:16px}
+canvas{max-height:240px}
+.cc.full canvas{max-height:200px}
+
+/* TABLES */
+.tcard{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead th{background:var(--surf2);padding:9px 13px;text-align:right;font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.6px;color:var(--muted);white-space:nowrap;border-bottom:1px solid var(--border)}
+thead th:first-child{text-align:left;min-width:195px;padding-left:16px}
+tbody tr{border-bottom:1px solid rgba(48,54,61,.6);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(88,166,255,.04)}
+tbody td{padding:9px 13px;text-align:right;color:var(--muted);white-space:nowrap}
+tbody td:first-child{text-align:left;color:var(--text);padding-left:16px}
+tr.rT td{background:var(--surf2);color:var(--text);font-weight:600}
+tr.rT td:first-child{color:var(--blue)}
+tr.rF td{background:rgba(88,166,255,.1);color:var(--blue);font-weight:700;font-size:13px}
+tr.rI td:first-child{color:var(--green)}
+tr.rE td:first-child{color:var(--orange)}
+tr.rH{background:rgba(88,166,255,.03)}
+.vp{color:var(--green)!important}.vn{color:var(--red)!important}
+
+/* TWO COL */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:28px}
+
+/* ABB */
+.abb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.abb{background:var(--surf2);border:1px solid var(--border);border-radius:10px;padding:14px 15px;transition:all .15s;display:flex;flex-direction:column;gap:2px}
+.abb:hover{border-color:var(--orange);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+.abb-n{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.abb-row{display:flex;align-items:baseline;gap:3px;margin-top:6px}
+.abb-val{font-size:24px;font-weight:700;color:var(--orange);font-family:'DM Sans',sans-serif;line-height:1}
+.abb-unit{font-size:11px;color:var(--muted)}
+.abb-annual{font-size:11px;color:var(--faint);margin-top:3px}
+.abb.tot{border-color:rgba(247,129,102,.4);background:rgba(247,129,102,.06)}
+.abb.tot .abb-val{color:var(--orange)}
+.abb.tot .abb-n{color:var(--orange)}
+
+/* Google Drive button */
+.gdrive-btn {
+  display:flex;align-items:center;gap:10px;
+  padding:12px 18px;border-radius:var(--r);
+  background:var(--surf);border:1.5px solid var(--border);
+  color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:500;transition:all .2s;white-space:nowrap;
+}
+.gdrive-btn:hover{border-color:#4285f4;background:rgba(66,133,244,.08)}
+.gdrive-btn.loading{opacity:.7;pointer-events:none}
+.gdrive-btn.ok{border-color:var(--green);border-style:solid}
+
+/* Carta banner — progress bar full width */
+.carta-banner {
+  margin-bottom: 20px;
+}
+.carta-banner-progress {
+  background: linear-gradient(135deg, #1a1040 0%, #0d1117 100%);
+  border: 1.5px solid var(--purple);
+  border-radius: var(--r);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.cbp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cbp-title {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  color: var(--purple);
+  display: flex; align-items: center; gap: 6px;
+}
+.cbp-title::after {
+  content: '📌 MESE IN CORSO';
+  font-size: 9px; color: var(--purple); opacity: .6; font-weight: 600;
+}
+.cbp-total {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px; color: var(--text); letter-spacing: -.3px;
+}
+.cbp-total span { font-size: 12px; color: var(--muted); font-family: 'DM Sans',sans-serif; }
+/* Bar */
+.cbp-bar-wrap {
+  background: rgba(80,227,164,.15);
+  border-radius: 12px;
+  height: 38px;
+  overflow: hidden;
+  position: relative;
+}
+.cbp-bar-spent {
+  height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #f97316, #fb923c);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+  letter-spacing: .3px;
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+  min-width: 48px;
+}
+/* Labels row */
+.cbp-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cbp-label {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.cbp-label-name {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .6px; font-weight: 600;
+}
+.cbp-label-val {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 20px; letter-spacing: -.3px; line-height: 1;
+}
+.cbp-label-sub { font-size: 10px; color: var(--muted); }
+
+@media(max-width:480px){
+  .cbp-bar-wrap{ height: 32px; }
+  .cbp-bar-spent{ font-size: 11px; }
+  .cbp-label-val{ font-size: 17px; }
+}
+
+/* Saldo table column toggle */
+.col-toggle {
+  padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border); background: var(--surf);
+  color: var(--text); transition: all .15s; font-family: 'DM Sans', sans-serif;
+}
+.col-toggle.on  { border-color: var(--blue); background: rgba(88,166,255,.15); color: var(--blue); }
+.col-toggle.off { opacity: .45; }
+
+/* Monthly KPI — slightly different accent */
+#kpis-month .kpi::after{ background: linear-gradient(90deg, var(--purple), var(--blue)); }
+#kpis-month .kpi-val{ font-size: 28px; }
+.kpi.highlight::after{ background: linear-gradient(90deg,#ffd700,var(--orange)) !important; }
+
+/* PAGE TABS */
+.page-tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:0}
+.page-tab{
+  padding:10px 20px;border:none;background:none;color:var(--muted);cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+  border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;border-radius:0;
+}
+.page-tab:hover{color:var(--text)}
+.page-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+
+/* EMPTY */
+.empty{text-align:center;padding:90px 20px;color:var(--faint)}
+.empty-ic{font-size:52px;margin-bottom:20px;opacity:.4}
+.empty h2{font-size:20px;color:var(--muted);margin-bottom:8px;font-weight:400}
+.empty p{font-size:13px;line-height:1.7;color:var(--faint)}
+
+.badge{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.4px;margin-left:6px;background:rgba(247,129,102,.15);color:var(--orange)}
+.hidden{display:none!important}
+
+/* VALUTAZIONE DIVIDER */
+.vsec-divider{
+  display:flex;align-items:center;gap:16px;
+  margin:36px 0 24px;
+  color:var(--purple);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+}
+.vsec-divider::before,.vsec-divider::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(188,140,255,.3),transparent);
+}
+.vsec-divider span{white-space:nowrap}
+
+/* debug box */
+#dbg{display:none;background:rgba(255,100,0,.1);border:1px solid rgba(255,100,0,.3);border-radius:8px;
+  padding:12px 16px;margin-bottom:20px;font-size:11px;color:var(--orange);font-family:monospace;white-space:pre-wrap}
+
+/* Acquisti Generici — expandable row */
+.acq-toggle-row td:first-child { cursor:pointer; user-select:none; }
+.acq-toggle-row td:first-child:hover { color:var(--blue) !important; }
+.acq-toggle-btn {
+  display:inline-flex; align-items:center; gap:6px;
+}
+.acq-toggle-btn::before {
+  content:'▶';
+  font-size:8px; color:var(--muted);
+  transition:transform .2s;
+  display:inline-block;
+}
+.acq-toggle-btn.open::before { transform:rotate(90deg); color:var(--blue); }
+.acq-sub-row td { padding:6px 13px 6px 32px !important; font-size:11.5px; }
+.acq-sub-row td:first-child { color:var(--muted) !important; padding-left:32px !important; }
+.acq-sub-row { background:rgba(88,166,255,.03); }
+.acq-sub-row:last-child { border-bottom:1px solid var(--border) !important; }
+
+@media(max-width:800px){
+  .cgrid,.two{grid-template-columns:1fr}
+  header{flex-direction:column;align-items:flex-start;gap:12px}
+  .upz{min-width:unset;width:100%}
+}
+
+/* ── MOBILE OPTIMIZATIONS (max 480px) ── */
+@media(max-width:480px){
+
+  /* Spacing */
+  .wrap{padding:0 12px 60px}
+
+  /* Header */
+  .h-title{font-size:26px}
+  header{padding:20px 0 16px;gap:10px}
+  header > div:nth-child(2){width:100%;flex-direction:column;gap:8px}
+  .upz{padding:10px 14px}
+  .gdrive-btn{width:100%;justify-content:center;padding:10px 14px}
+
+  /* Tabs */
+  .page-tabs{margin-bottom:16px}
+  .page-tab{padding:8px 12px;font-size:12px}
+
+  /* Year pills */
+  .toolbar{gap:6px;margin-bottom:16px}
+  .pill{padding:4px 10px;font-size:11px}
+  .tb-label{font-size:10px}
+
+  /* KPI grid — 2 per row on mobile */
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  .kpi{padding:14px 12px 12px}
+  .kpi-lbl{font-size:10px;margin-bottom:6px}
+  .kpi-val{font-size:20px;margin-bottom:4px}
+  .kpi-sub{font-size:10px}
+  .kpi-trend{font-size:10px}
+
+  /* Charts */
+  .cgrid{gap:10px;margin-bottom:20px}
+  .cc{padding:14px 12px}
+  .cc-title{font-size:10px;margin-bottom:10px}
+  canvas{max-height:180px !important}
+
+  /* Sections */
+  .sec{margin-bottom:20px}
+  .sec-title{font-size:11px}
+  .sec-note{display:none} /* hide long notes on mobile */
+  .vsec-divider{font-size:11px;margin:24px 0 16px}
+
+  /* Tables — compact on mobile */
+  .tcard{border-radius:8px}
+  table{font-size:11px}
+  thead th{padding:7px 8px;font-size:9.5px;letter-spacing:0}
+  tbody td{padding:7px 8px}
+  tbody td:first-child{padding-left:10px;min-width:120px}
+  thead th:first-child{padding-left:10px;min-width:120px}
+
+  /* Table scrolling hint */
+  .tscroll{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .tscroll::after{
+    content:'← scorri →';
+    display:block;
+    text-align:center;
+    font-size:10px;
+    color:var(--faint);
+    padding:4px 0 6px;
+  }
+
+  /* Abbonamenti grid */
+  .abb-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+  .abb{padding:10px 11px}
+  .abb-n{font-size:10px}
+  .abb-val{font-size:15px}
+  .abb-annual{font-size:9px}
+
+  /* Two col → single col */
+  .two{grid-template-columns:1fr;gap:14px}
+
+  /* Section headers */
+  .sec-hd{flex-direction:column;align-items:flex-start;gap:4px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <div class="h-title">Piano Risparmi</div>
+    <div class="h-sub" id="h-sub">Carica il file Excel per visualizzare i dati</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <label class="upz" id="dz" for="fi">
+      <div class="upz-ic" id="upic">📂</div>
+      <div class="upz-txt">
+        <strong id="uptitle">Carica file Excel</strong>
+        <span id="upsub">.xlsm / .xlsx — trascina o clicca</span>
+      </div>
+    </label>
+    <button class="gdrive-btn" id="gdrive-btn" onclick="loadFromOneDrive()">
+      <svg width="18" height="18" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+      <span id="gdrive-label">Aggiorna da OneDrive</span>
+    </button>
+  </div>
+  <input type="file" id="fi" accept=".xlsx,.xlsm,.xls">
+</header>
+
+<div id="dbg"></div>
+
+<!-- PAGE TABS -->
+<div class="page-tabs">
+  <button class="page-tab active" id="tab-bilancio" onclick="switchPage('bilancio')">📊 Bilancio & Risparmi</button>
+  <button class="page-tab" id="tab-energia" onclick="switchPage('energia')">⚡ Gas & Energia</button>
+  <button class="page-tab" id="tab-coint" onclick="switchPage('coint')">🏠 Cointestato</button>
+</div>
+
+<div id="page-bilancio">
+<div id="empty" class="empty">
+  <div class="empty-ic">📊</div>
+  <h2>Nessun file caricato</h2>
+  <p>Carica il tuo <strong>PIANO_RISPARMI_…xlsm</strong> per vedere la dashboard.<br>
+  La dashboard si aggiorna ogni volta che carichi una versione più recente.</p>
+</div>
+
+<div id="dash" class="hidden">
+
+  <!-- VISTA TOGGLE + YEAR/MONTH PILLS -->
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+
+    <!-- Toggle annuale/mensile -->
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="tb-label">Vista</span>
+      <button class="pill on" id="btn-annual" onclick="setMode('annual')">📅 Annuale</button>
+      <button class="pill" id="btn-monthly" onclick="setMode('monthly')">📆 Mensile</button>
+    </div>
+
+    <!-- Anno pills (always visible) -->
+    <div class="toolbar" id="pills"></div>
+
+    <!-- Mese pills (solo in modalità mensile) -->
+    <div class="toolbar hidden" id="pills-month"></div>
+
+  </div>
+
+  <!-- KPI annuali -->
+  <div class="kpi-grid" id="kpis"></div>
+
+  <!-- KPI mensili (hidden in annual mode) -->
+  <div class="carta-banner hidden" id="carta-banner"></div>
+  <div class="kpi-grid hidden" id="kpis-month"></div>
+
+  <!-- Grafico composizione carta (solo vista mensile) -->
+  <div class="cgrid hidden" id="sec-carta-comp">
+    <div class="cc">
+      <div class="cc-title">Composizione Spese Fisse — <span id="carta-comp-yr"></span></div>
+      <canvas id="ch-carta-fisse"></canvas>
+    </div>
+    <div class="cc">
+      <div class="cc-title">Composizione Acquisti Generici — <span id="carta-comp-acq-yr"></span></div>
+      <canvas id="ch-carta-acq"></canvas>
+    </div>
+  </div>
+
+  <div class="cgrid" id="sec-ch-month">
+    <div class="cc full">
+      <div class="cc-title">Entrate · Uscite · Margine — andamento mensile</div>
+      <canvas id="ch-month"></canvas>
+    </div>
+  </div>
+
+  <div class="cgrid" id="sec-ch-pie-risp">
+    <div class="cc">
+      <div class="cc-title">Composizione Spese — <span id="pie-yr"></span></div>
+      <canvas id="ch-pie"></canvas>
+    </div>
+    <div class="cc">
+      <div class="cc-title">Risparmio / Perdita Media Mensile per Anno</div>
+      <canvas id="ch-risparmio"></canvas>
+    </div>
+  </div>
+
+  <!-- ══ VALUTAZIONE SPESE E RISPARMI ══ -->
+  <div class="vsec-divider" id="sec-divider-val">
+    <span>📊 Valutazione Spese e Risparmi</span>
+  </div>
+
+  <!-- KPI valutazione -->
+  <div class="kpi-grid" id="kpis-val"></div>
+
+  <!-- Stacked bar categorie + trend risparmio -->
+  <div class="cgrid" id="sec-ch-cat">
+    <div class="cc full">
+      <div class="cc-title">Spese Mensili per Categoria — confronto annuale</div>
+      <canvas id="ch-cat" style="max-height:260px"></canvas>
+    </div>
+  </div>
+
+  <div class="cgrid" id="sec-ch-guad">
+    <div class="cc">
+      <div class="cc-title">Guadagno vs Spese totali</div>
+      <canvas id="ch-guad"></canvas>
+    </div>
+    <div class="cc">
+      <div class="cc-title">% Risparmio / Guadagno per Anno</div>
+      <canvas id="ch-pct-risp"></canvas>
+    </div>
+  </div>
+
+  <!-- Tabella valutazione -->
+  <div class="sec" id="sec-t-val">
+    <div class="sec-hd"><span class="sec-title">Dettaglio Categorie per Anno</span></div>
+    <div class="tcard"><div class="tscroll"><table id="t-val"></table></div></div>
+  </div>
+
+  <div class="sec" id="sec-t-ann">
+    <div class="sec-hd"><span class="sec-title">Riepilogo Annuale — Conto Corrente</span></div>
+    <div class="tcard"><div class="tscroll"><table id="t-ann"></table></div></div>
+  </div>
+
+  <div class="two" id="sec-abbs-month">
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-title">Abbonamenti Carta <span class="badge" id="abb-yr"></span></span>
+      </div>
+      <div class="abb-grid" id="abbs"></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-title">Ultimi 18 mesi</span></div>
+      <div class="tcard"><div class="tscroll">
+        <table id="t-month" style="font-size:12px"></table>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="sec" id="sec-t-carta">
+    <div class="sec-hd"><span class="sec-title">Carta di Credito — Dettaglio Annuale</span></div>
+    <div class="tcard"><div class="tscroll"><table id="t-carta"></table></div></div>
+  </div>
+
+  <div class="sec" id="sec-ch-proj">
+    <div class="sec-hd">
+      <span class="sec-title">Proiezione Saldo Conto</span>
+      <span class="sec-note">I valori futuri sono calcolati dal foglio BILANCIO</span>
+    </div>
+    <div class="cc">
+      <canvas id="ch-proj" style="max-height:200px"></canvas>
+    </div>
+  </div>
+</div><!-- /dash -->
+</div><!-- /page-bilancio -->
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 2: GAS & ENERGIA                          -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-energia" class="hidden">
+
+  <div id="empty-ene" class="empty">
+    <div class="empty-ic">⚡</div>
+    <h2>Nessun file caricato</h2>
+    <p>Carica il file Excel per visualizzare l'analisi Gas &amp; Energia.</p>
+  </div>
+
+  <div id="dbg-ene" style="display:none;background:rgba(255,100,0,.1);border:1px solid rgba(255,100,0,.3);border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:11px;color:var(--orange);font-family:monospace;white-space:pre-wrap"></div>
+
+  <div id="dash-ene" class="hidden">
+
+    <!-- Year filter -->
+    <div class="toolbar" id="pills-ene"></div>
+
+    <!-- KPI -->
+    <div class="kpi-grid" id="kpis-ene"></div>
+
+    <!-- Trend costi bollette -->
+    <div class="cgrid">
+      <div class="cc full">
+        <div class="cc-title">Importo Bollette Bimestrali — Gas 🔵 vs Energia ⚡ — periodo consumi indicato</div>
+        <canvas id="ch-ene-trend" style="max-height:220px"></canvas>
+      </div>
+    </div>
+
+    <!-- Totali annuali + composizione -->
+    <div class="cgrid">
+      <div class="cc">
+        <div class="cc-title">Totale Annuale — Gas vs Energia Elettrica</div>
+        <canvas id="ch-ene-ann"></canvas>
+      </div>
+      <div class="cc">
+        <div class="cc-title">Composizione Bolletta Gas — <span id="gas-comp-yr">anno</span></div>
+        <canvas id="ch-gas-comp"></canvas>
+      </div>
+    </div>
+
+    <!-- Consumi fisici -->
+    <div class="cgrid">
+      <div class="cc">
+        <div class="cc-title">Consumo Gas per Bolletta (Smc) — mesi di riferimento</div>
+        <canvas id="ch-gas-smc"></canvas>
+      </div>
+      <div class="cc">
+        <div class="cc-title">Consumo Energia per Bolletta (kWh) — mesi di riferimento</div>
+        <canvas id="ch-ene-kw"></canvas>
+      </div>
+    </div>
+
+    <!-- Prezzi unitari -->
+    <div class="cgrid">
+      <div class="cc">
+        <div class="cc-title">Prezzo Gas €/Smc per Anno</div>
+        <canvas id="ch-gas-price"></canvas>
+      </div>
+      <div class="cc">
+        <div class="cc-title">Prezzo Energia €/kWh per Anno</div>
+        <canvas id="ch-ene-price"></canvas>
+      </div>
+    </div>
+
+    <!-- Tabella bollette dettaglio -->
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-title">📋 Storico Bollette — dettaglio bimestrale</span>
+        <span class="sec-note">Ogni riga = 1 bolletta bimestrale. "Periodo consumi" = i 2 mesi coperti dalla bolletta.</span>
+      </div>
+      <div class="tcard"><div class="tscroll"><table id="t-bills"></table></div></div>
+    </div>
+
+    <!-- Tabelle annuali composizione -->
+    <div class="two">
+      <div class="sec">
+        <div class="sec-hd"><span class="sec-title">🔥 Composizione Bolletta Gas per Anno</span></div>
+        <div class="tcard"><div class="tscroll"><table id="t-gas"></table></div></div>
+      </div>
+      <div class="sec">
+        <div class="sec-hd"><span class="sec-title">⚡ Composizione Bolletta Energia per Anno</span></div>
+        <div class="tcard"><div class="tscroll"><table id="t-ene"></table></div></div>
+      </div>
+    </div>
+
+  </div><!-- /dash-ene -->
+</div><!-- /page-energia -->
+
+<!-- PAGE COINTESTATO -->
+<div id="page-coint" class="hidden">
+  <div id="empty-coint" class="empty hidden">
+    <div class="empty-ic">🏠</div>
+    <h2>Nessun dato cointestato</h2>
+    <p>Carica il file Excel per visualizzare i dati del conto cointestato.</p>
+  </div>
+  <div id="dash-coint" class="hidden">
+    <!-- Toggle annuale/mensile -->
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="tb-label">Vista</span>
+        <button class="pill on" id="btn-coint-annual" onclick="setCointMode('annual')">📅 Annuale</button>
+        <button class="pill" id="btn-coint-monthly" onclick="setCointMode('monthly')">📆 Mensile</button>
+      </div>
+      <div class="toolbar" id="pills-coint"></div>
+      <div class="toolbar hidden" id="pills-coint-month"></div>
+    </div>
+
+    <!-- KPI annuali -->
+    <div class="kpi-grid" id="kpis-coint"></div>
+
+    <!-- KPI mensili -->
+    <div class="kpi-grid hidden" id="kpis-coint-month"></div>
+
+    <!-- Grafici -->
+    <div class="cgrid" id="charts-coint">
+      <div class="cc full">
+        <div class="cc-title">Spese Totali Annuali — Conto Cointestato</div>
+        <canvas id="ch-coint-annual"></canvas>
+      </div>
+    </div>
+    <div class="cgrid">
+      <div class="cc">
+        <div class="cc-title">Suddivisione per Categoria</div>
+        <canvas id="ch-coint-pie"></canvas>
+      </div>
+      <div class="cc">
+        <div class="cc-title">Andamento Mensile</div>
+        <canvas id="ch-coint-monthly"></canvas>
+      </div>
+    </div>
+
+    <!-- Saldo cumulativo tabella -->
+    <div class="sec" style="margin-bottom:20px">
+      <div class="sec-hd" style="flex-wrap:wrap;gap:10px;margin-bottom:12px">
+        <span class="sec-title">📊 Saldo Cumulativo per Categoria — dettaglio mensile</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span class="tb-label">Anno</span>
+          <div id="pills-saldo-year" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+      <!-- Column toggle -->
+      <div id="saldo-col-toggles" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <div class="tcard"><div class="tscroll"><table id="t-coint-saldo"></table></div></div>
+    </div>
+
+    <!-- KPI Mutuo -->
+    <div class="kpi-grid" id="kpis-mutuo" style="margin-bottom:20px"></div>
+
+    <div class="cgrid">
+      <div class="cc full">
+        <div class="cc-title">Proiezione Mutuo — Debito Residuo fino a Ottobre 2040</div>
+        <canvas id="ch-coint-mutuo"></canvas>
+      </div>
+
+    <!-- Tabella dettaglio mensile -->
+    <div class="sec" id="sec-coint-table">
+      <div class="sec-hd">
+        <span class="sec-title">📋 Dettaglio Mensile per Categoria</span>
+      </div>
+      <div class="tcard"><div class="tscroll"><table id="t-coint"></table></div></div>
+    </div>
+  </div>
+</div><!-- /page-coint -->
+
+<script>
+// ══════════════════════════════════════════════════════
+//  GLOBALS
+// ══════════════════════════════════════════════════════
+let D = null, SEL = null, SEL_MODE = 'annual', SEL_MONTH = null, CH = {};
+
+// ══════════════════════════════════════════════════════
+//  UPLOAD
+// ══════════════════════════════════════════════════════
+const dz = document.getElementById('dz');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+document.getElementById('fi').addEventListener('change', e => { if(e.target.files[0]) load(e.target.files[0]); });
+
+function load(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      // cellDates:true converts serial dates to JS Date objects
+      const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
+      D = parse(wb);
+      D._sheetNames = wb.SheetNames;
+      D.energia = parseEnergia(wb);
+      extractBudget(wb);
+      D.coint = parseCoint(wb);
+      D.acqCat = parseAcqCategorie(wb);
+      SEL = D.years[D.years.length - 1];
+      document.getElementById('upic').textContent = '✅';
+      document.getElementById('uptitle').textContent = file.name.length > 30 ? file.name.slice(0,27)+'…' : file.name;
+      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
+      dz.classList.add('ok');
+      document.getElementById('h-sub').textContent = `Anni disponibili: ${D.years.join(', ')} · ${D.monthly.length} mesi di dati mensili`;
+      render();
+      renderEnergia();
+    } catch(err) {
+      document.getElementById('dbg').style.display = 'block';
+      document.getElementById('dbg').textContent = 'ERRORE: ' + err.message + '\n\n' + err.stack;
+    }
+  };
+  r.readAsArrayBuffer(file);
+}
+
+// Extract budget info from BILANCIO summary rows
+function extractBudget(wb) {
+  try {
+    const shName = wb.SheetNames.find(n=>n==='BILANCIO') || wb.SheetNames[0];
+    const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName],{header:1,defval:null,raw:false});
+    // Row 3 (idx 2) = "Spesa Carta 1163,138 €"
+    // Row 4 (idx 3) = "Budget Rimanente 136,86 €"
+    // Row 5 (idx 4) = "Margine mensile 2026 491,8 €"
+    const r2 = String((raw[2]||[])[1]||'');
+    const r3 = String((raw[3]||[])[1]||'');
+    const r4 = String((raw[4]||[])[1]||'');
+    if(r2.toLowerCase().includes('spesa carta'))
+      D.spesaCarta = r2.replace(/spesa carta\s*/i,'').trim();
+    if(r3.toLowerCase().includes('budget rimanente'))
+      D.budgetRimanente = r3.replace(/budget rimanente\s*/i,'').trim();
+    if(r4.toLowerCase().includes('margine mensile'))
+      D.margineMensile = r4.replace(/margine mensile\s*\d*\s*/i,'').trim();
+  } catch(e){ console.warn('Budget parse:',e.message); }
+}
+
+
+// ══════════════════════════════════════════════════════
+//  ONEDRIVE AUTO-LOAD
+//  Uses the OneDrive Shares API — no proxy, no CORS issues
+// ══════════════════════════════════════════════════════
+
+// This URL is generated from the public share link via base64url encoding.
+// It works as long as the OneDrive file is shared as "Anyone with the link".
+const DROPBOX_URL = 'https://www.dropbox.com/scl/fi/4tngypsxhxyiiunq4fcsm/dati.xlsx?rlkey=xe3q06bklct4sqjsmxg93hsm8&st=1580uivv&dl=1';
+
+// Fallback: the file hosted in the same GitHub Pages repo
+const GITHUB_URL = 'dati.xlsx';
+
+async function fetchWithTimeout(url, ms = 15000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    return r;
+  } catch(e) { clearTimeout(t); throw e; }
+}
+
+async function loadFromOneDrive() {
+  const btn = document.getElementById('gdrive-btn');
+  const lbl = document.getElementById('gdrive-label');
+  const dbg = document.getElementById('dbg');
+  btn.classList.add('loading');
+  lbl.textContent = 'Scaricando…';
+  dbg.style.display = 'none';
+
+  // Try OneDrive first, then GitHub fallback
+  const sources = [
+    { url: DROPBOX_URL, name: 'Dropbox' },
+    { url: GITHUB_URL,   name: 'GitHub'   },
+  ];
+
+  for (const src of sources) {
+    try {
+      lbl.textContent = `Da ${src.name}…`;
+      console.log('Trying:', src.name, src.url);
+      const res = await fetchWithTimeout(src.url, 15000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength < 5000) throw new Error('File troppo piccolo');
+
+      const wb = XLSX.read(buf, { type:'array', cellDates:true });
+      D = parse(wb);
+      D._sheetNames = wb.SheetNames;
+      D.energia = parseEnergia(wb);
+      extractBudget(wb);
+      D.coint = parseCoint(wb);
+      D.acqCat = parseAcqCategorie(wb);
+      SEL = D.years[D.years.length - 1];
+
+      document.getElementById('upic').textContent = '✅';
+      document.getElementById('uptitle').textContent = 'Piano Risparmi';
+      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
+      document.getElementById('dz').classList.add('ok');
+      document.getElementById('h-sub').textContent = `Dati aggiornati da ${src.name} · Anni: ${D.years.join(', ')}`;
+
+      btn.classList.remove('loading');
+      btn.classList.add('ok');
+      lbl.textContent = `✅ ${src.name}`;
+      setTimeout(() => { lbl.textContent = 'Aggiorna'; btn.classList.remove('ok'); }, 3000);
+
+      render();
+      renderEnergia();
+      return;
+
+    } catch(err) {
+      console.warn(src.name, 'failed:', err.message);
+    }
+  }
+
+  // All failed
+  btn.classList.remove('loading');
+  lbl.textContent = 'Aggiorna';
+  dbg.style.display = 'block';
+  dbg.textContent = `❌ Caricamento automatico non riuscito.\n\nUsa il pulsante 📂 per caricare il file manualmente.\n\nSe vuoi il caricamento automatico, assicurati che il file OneDrive sia condiviso come "Chiunque abbia il link".`;
+}
+
+// Auto-load on page open
+window.addEventListener('load', () => setTimeout(loadFromOneDrive, 600));
+
+
+
+// Multiple download strategies — tries each until one works
+function getDriveURLs() {
+  const id = DRIVE_FILE_ID;
+  const direct = `https://drive.google.com/uc?export=download&id=${id}&confirm=t`;
+  return [
+    // Strategy 1: corsproxy.io
+    `https://corsproxy.io/?${encodeURIComponent(direct)}`,
+    // Strategy 2: allorigins
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(direct)}`,
+    // Strategy 3: cors.sh
+    `https://cors.sh/${direct}`,
+    // Strategy 4: thingproxy
+    `https://thingproxy.freeboard.io/fetch/${direct}`,
+  ];
+}
+
+async function fetchWithTimeout(url, timeoutMs = 12000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    return res;
+  } catch(e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+async function loadFromDrive() {
+  const btn = document.getElementById('gdrive-btn');
+  const lbl = document.getElementById('gdrive-label');
+  const dbg = document.getElementById('dbg');
+  btn.classList.add('loading');
+  lbl.textContent = 'Scaricando…';
+  dbg.style.display = 'none';
+
+  const urls = getDriveURLs();
+  let lastError = null;
+
+  for (let i = 0; i < urls.length; i++) {
+    lbl.textContent = `Tentativo ${i+1}/${urls.length}…`;
+    try {
+      console.log(`Trying proxy ${i+1}:`, urls[i]);
+      const res = await fetchWithTimeout(urls[i], 15000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength < 1000) throw new Error('File troppo piccolo, risposta non valida');
+
+      // Success — parse and render
+      const wb = XLSX.read(buf, { type:'array', cellDates:true });
+      D = parse(wb);
+      D._sheetNames = wb.SheetNames;
+      D.energia = parseEnergia(wb);
+      extractBudget(wb);
+      D.coint = parseCoint(wb);
+      D.acqCat = parseAcqCategorie(wb);
+      SEL = D.years[D.years.length - 1];
+
+      document.getElementById('upic').textContent = '✅';
+      document.getElementById('uptitle').textContent = 'Piano Risparmi.xlsm';
+      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
+      document.getElementById('dz').classList.add('ok');
+      document.getElementById('h-sub').textContent = `Dati caricati da Google Drive · Anni: ${D.years.join(', ')}`;
+
+      btn.classList.remove('loading');
+      btn.classList.add('ok');
+      lbl.textContent = '✅ Aggiornato';
+      setTimeout(() => { lbl.textContent = 'Aggiorna da Drive'; btn.classList.remove('ok'); }, 3000);
+
+      render();
+      renderEnergia();
+      return; // Done!
+
+    } catch(err) {
+      console.warn(`Proxy ${i+1} failed:`, err.message);
+      lastError = err;
+    }
+  }
+
+  // All proxies failed
+  btn.classList.remove('loading');
+  lbl.textContent = 'Aggiorna da Drive';
+  dbg.style.display = 'block';
+  dbg.textContent = `❌ Impossibile caricare da Google Drive automaticamente.\n\nErrore: ${lastError?.message}\n\n⚠️ Verifica che il file sia condiviso pubblicamente:\nGoogle Drive → tasto destro → Condividi → "Chiunque abbia il link" → Visualizzatore\n\nAlternativa: usa il pulsante 📂 per caricare il file manualmente.`;
+}
+
+// Auto-load on page open
+window.addEventListener('load', () => setTimeout(loadFromDrive, 800));
+
+
+//  Structure verified against the actual file:
+//  - Row idx 8  (Excel row 9):  year headers in cols 2-8 (C-I) AND dates in cols 18+ (S+)
+//  - Row idx 9  (Excel row 10): 'RIMANENZA INIZIALE' in col 1 (B), values in cols 2-8
+//  - Row idx 67 (Excel row 68): date objects in cols 18+ for monthly series
+//  - Row idx 68 (Excel row 69): col 8 = 'ENTRATE', values in cols 18+
+//  - Row idx 69 (Excel row 70): col 8 = 'USCITE',  values in cols 18+
+//  - Row idx 70 (Excel row 71): col 8 = 'MARGINE', values in cols 18+
+//  - Row idx 13 (Excel row 14): 'SITUAZIONE CONTO IN BANCA', saldo values in cols 18+
+// ══════════════════════════════════════════════════════
+function parse(wb) {
+  const shName = wb.SheetNames.find(n => n.toUpperCase() === 'BILANCIO') || wb.SheetNames[0];
+  const ws = wb.Sheets[shName];
+  // header:1 → 2D array, row[0]=A, row[1]=B, row[2]=C ...
+  const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:null, raw:true });
+
+  const dbg = [];
+  dbg.push(`Sheet: ${shName}, rows: ${raw.length}`);
+
+  const toN = v => (v === null || v === undefined || v === '') ? 0 : (typeof v === 'number' ? v : parseFloat(v) || 0);
+  const toS = v => v == null ? '' : String(v).trim();
+
+  // ── FIND YEAR ROW (row with consecutive integer years 2015-2050 in cols 2-12) ──
+  let yearRowIdx = -1;
+  let yearCols = [];
+
+  for (let r = 0; r < Math.min(20, raw.length); r++) {
+    const row = raw[r] || [];
+    let hits = [];
+    for (let c = 0; c < Math.min(15, row.length); c++) {
+      const v = row[c];
+      if (typeof v === 'number' && Number.isInteger(v) && v >= 2015 && v <= 2050) {
+        hits.push({ c, year: v });
+      }
+    }
+    if (hits.length >= 4) {
+      yearRowIdx = r;
+      // Only keep the first consecutive block (skip duplicates from the median columns)
+      // cols 2-8 are the main annual block; cols 10-16 are medians
+      yearCols = hits.filter(h => h.c >= 2 && h.c <= 9);
+      dbg.push(`Year row found at idx ${r}: years=${yearCols.map(x=>x.year)}, cols=${yearCols.map(x=>x.c)}`);
+      break;
+    }
+  }
+
+  if (yearRowIdx < 0 || yearCols.length < 2) {
+    throw new Error(`Riga anni non trovata. Foglio: "${shName}", righe: ${raw.length}`);
+  }
+
+  const years = yearCols.map(x => x.year);
+  const cols  = yearCols.map(x => x.c);
+
+  // ── FIND ROW BY LABEL (col 1 = column B) ──
+  function findRow(keyword, startRow = 0) {
+    const kw = keyword.toLowerCase();
+    for (let r = startRow; r < raw.length; r++) {
+      const b = toS((raw[r] || [])[1]).toLowerCase();
+      if (b.includes(kw)) return r;
+    }
+    return -1;
+  }
+
+  function getAnn(rowIdx) {
+    if (rowIdx < 0) return years.map(() => 0);
+    const row = raw[rowIdx] || [];
+    return cols.map(c => toN(row[c]));
+  }
+
+  // ── ANNUAL DATA ──
+  const rimanenzaIniziale  = getAnn(findRow('rimanenza iniziale'));
+  const stipendio          = getAnn(findRow('stipendio mensile'));
+  const tredicesima        = getAnn(findRow('tredicesima'));
+  const totaleStipendio    = getAnn(findRow('totale stipendio'));
+  const speseFisseCasa     = getAnn(findRow('spese fisse casa'));
+  const rateAuto           = getAnn(findRow('spese fisse auto'));
+  const spesaAssic         = getAnn(findRow('spesa assicurazione'));
+  const commCanone         = getAnn(findRow('commissioni canone'));
+  const telepass           = getAnn(findRow('telepass'));
+  const spesaGas           = getAnn(findRow('spesa gas'));
+  const spesaLuce          = getAnn(findRow('spesa luce'));
+  const prelievo           = getAnn(findRow('prelievo contanti'));
+  const rateMensili        = getAnn(findRow('rate mensili varie'));
+  const speseGeneriche     = getAnn(findRow('spese generiche'));
+  const totaleSpeseConto   = getAnn(findRow('totale spese conto'));
+  const entrateStraord     = getAnn(findRow('entrate straordinarie'));
+  const detrazioniIrpef    = getAnn(findRow('detrazioni irpef'));
+  const totaleEntrateExtra = getAnn(findRow('totale entrate extra'));
+  const addebitoCarta      = getAnn(findRow('addebito carta'));
+  const variazioneAnnua    = getAnn(findRow('variazione annua'));
+  const marginePct         = getAnn(findRow('margine percentuale'));
+  const rimanenzaFinale    = getAnn(findRow('rimanenza finale'));
+
+  dbg.push(`Rimanenza finale: ${rimanenzaFinale}`);
+  dbg.push(`Totale stipendio: ${totaleStipendio}`);
+
+  // ── VALUTAZIONE SPESE E RISPARMI ──
+  // Separate sheet: col 0 = label, cols 1-7 = years (same year order)
+  const valShName = wb.SheetNames.find(n => n.toLowerCase().includes('valutazione spese')) || null;
+  let val = null;
+  if (valShName) {
+    const wsV = wb.Sheets[valShName];
+    const rawV = XLSX.utils.sheet_to_json(wsV, { header:1, defval:null, raw:true });
+    dbg.push(`Valutazione sheet: ${valShName}, rows: ${rawV.length}`);
+
+    // Row 0 = header with years in cols 1-7
+    const vYearRow = rawV[0] || [];
+    const vYears = [];
+    const vCols = [];
+    for (let c = 1; c < vYearRow.length; c++) {
+      const v = vYearRow[c];
+      if (typeof v === 'number' && Number.isInteger(v) && v >= 2015 && v <= 2050) {
+        vYears.push(v); vCols.push(c);
+      }
+    }
+    dbg.push(`Valutazione years: ${vYears}`);
+
+    const toNv = v => (v===null||v===undefined||v==='')?0:(typeof v==='number'?v:parseFloat(v)||0);
+
+    function findVRow(kw) {
+      const k = kw.toLowerCase();
+      for (let r = 1; r < rawV.length; r++) {
+        const lbl = String((rawV[r]||[])[0]||'').toLowerCase();
+        if (lbl.includes(k)) return r;
+      }
+      return -1;
+    }
+
+    function getV(rowIdx) {
+      if (rowIdx < 0) return vYears.map(()=>0);
+      const row = rawV[rowIdx] || [];
+      return vCols.map(c => toNv(row[c]));
+    }
+
+    val = {
+      years: vYears,
+      costoMob:        getV(findVRow("costo mobilita")),
+      costoCasa:       getV(findVRow('costo casa')),
+      costoSoprav:     getV(findVRow('sopravvivenza')),
+      costoAbb:        getV(findVRow('abbonamenti')),
+      costoSvaghi:     getV(findVRow('svaghi')),
+      costoVacanze:    getV(findVRow('vacanze')),
+      costoSfizi:      getV(findVRow('sfizi')),
+      movimentiConto:  getV(findVRow('movimenti conto')),
+      tasse:           getV(findVRow('tasse')),
+      gestioneConto:   getV(findVRow('gestione conto')),
+      rateGeneriche:   getV(findVRow('rate generiche')),
+      totale:          getV(findVRow('totale')),
+      altreSpeseNC:    getV(findVRow('altre spese')),
+      guadagnoFisso:   getV(findVRow('guadagno medio fisso')),
+      guadagnoVar:     getV(findVRow('guadagno medio variabile')),
+      risparmioCom:    getV(findVRow('risparmio/perdita complessiva')),
+      risparmioOp:     getV(findVRow('risparmio/perdita operativa')),
+      pctRisparmio:    getV(findVRow('% risparmio')),
+    };
+  }
+
+  // ── CARTA DI CREDITO ──
+  const msOffice    = getAnn(findRow('microsoft office'));
+  const disneyPlus  = getAnn(findRow('disney plus'));
+  const netflix     = getAnn(findRow('netflix'));
+  const dazn        = getAnn(findRow('dazn'));
+  const nowTv       = getAnn(findRow('now tv'));
+  const videogames  = getAnn(findRow('videogames'));
+  const spotify     = getAnn(findRow('spotify'));
+  const internet    = getAnn(findRow('internet'));
+  const telefono    = getAnn(findRow('telefono'));
+  const amazonPrime = getAnn(findRow('amazon prime'));
+  const abbGen      = getAnn(findRow('abbonamenti generici'));
+  const impBollo    = getAnn(findRow('imposta di bollo'));
+  const totFisseCarta = getAnn(findRow('totale spese fisse'));
+  const acqGenerici = getAnn(findRow('acquisti generici'));
+  const totSpesVar  = getAnn(findRow('totale spese variabili'));
+
+  // ── MONTHLY DATA ──
+  // The monthly date row has Date objects starting from col 18 (column S in Excel)
+  // We find it by scanning for a row with many Date objects at cols 15+
+  // After that row, find the ENTRATE/USCITE/MARGINE rows by checking col 8
+
+  let monthDateRowIdx = -1;
+  for (let r = 50; r < raw.length; r++) {
+    const row = raw[r] || [];
+    let cnt = 0;
+    for (let c = 15; c < Math.min(row.length, 40); c++) {
+      if (row[c] instanceof Date) cnt++;
+    }
+    if (cnt >= 5) { monthDateRowIdx = r; break; }
+  }
+
+  dbg.push(`Monthly date row idx: ${monthDateRowIdx}`);
+
+  let eRowIdx = -1, uRowIdx = -1, mRowIdx = -1;
+  if (monthDateRowIdx >= 0) {
+    for (let r = monthDateRowIdx; r < Math.min(monthDateRowIdx + 12, raw.length); r++) {
+      const row = raw[r] || [];
+      const col8 = toS(row[8]).toUpperCase();
+      if (col8 === 'ENTRATE' && eRowIdx < 0)  eRowIdx = r;
+      if (col8 === 'USCITE'  && uRowIdx < 0)  uRowIdx = r;
+      if (col8 === 'MARGINE' && mRowIdx < 0)  mRowIdx = r;
+    }
+  }
+
+  dbg.push(`Monthly rows: E=${eRowIdx}, U=${uRowIdx}, M=${mRowIdx}`);
+
+  const monthly = [];
+  if (monthDateRowIdx >= 0 && eRowIdx >= 0) {
+    const dR = raw[monthDateRowIdx] || [];
+    const eR = raw[eRowIdx] || [];
+    const uR = uRowIdx >= 0 ? raw[uRowIdx] || [] : [];
+    const mR = mRowIdx >= 0 ? raw[mRowIdx] || [] : [];
+
+    for (let c = 15; c < dR.length; c++) {
+      const d = dR[c];
+      if (!(d instanceof Date)) continue;
+      // XLSX.js reads .xlsm dates with month shifted -1. Fix: add 1 month.
+      const fixed = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const yr = fixed.getFullYear();
+      if (yr < 2015 || yr > 2045) continue;
+      const ev = eR[c];
+      if (ev === null || ev === undefined) continue;
+      const e = toN(ev);
+      const u = toN(uR[c]);
+      const m = toN(mR[c]);
+      if (e === 0 && u === 0) continue;
+      monthly.push({
+        date: fixed, year: yr, month: fixed.getMonth() + 1,
+        label: fixed.toLocaleDateString('it-IT', { month:'short', year:'numeric' }),
+        entrate: e, uscite: u, margine: m,
+      });
+    }
+  }
+
+  dbg.push(`Monthly data points: ${monthly.length}, first: ${monthly[0]?.label}, last: ${monthly[monthly.length-1]?.label}`);
+
+  // ── SALDO MENSILE ──
+  // Row "SITUAZIONE CONTO IN BANCA" (idx 13), values at cols 18+
+  // Dates are at year row (idx 8), cols 18+
+  const saldoMonthly = [];
+  // ── SALDO MENSILE ──
+  // Row 32 in Excel (idx 31 in openpyxl, idx 30 in XLSX.js due to min_row=2 offset)
+  // Label: VARIAZIONE ANNUA — but monthly cols contain the running conto balance
+  // Row 32 Excel = XLSX.js idx 31 (min_row=1, so idx = Excel_row - 1)
+  // Label: VARIAZIONE ANNUA — monthly cols contain the running conto balance
+  const saldoRowIdx = 31;
+  dbg.push(`Saldo row idx: ${saldoRowIdx} (row 32 Excel = SALDO CONTO)`);
+
+  // Build a saldo lookup map: "year-month" -> saldo
+  const saldoMap = {};
+  {
+    const sR = raw[saldoRowIdx] || [];
+    const dR = raw[monthDateRowIdx] || [];  // usa stessa riga date del mensile
+    for (let c = 15; c < dR.length; c++) {
+      const d = dR[c];
+      if (!(d instanceof Date)) continue;
+      // Same XLSX.js date fix: add 1 month
+      const fixed = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      const yr = fixed.getFullYear();
+      if (yr < 2015 || yr > 2045) continue;
+      const sv = sR[c];
+      if (sv === null || sv === undefined) continue;
+      const s = toN(sv);
+      if (s === 0) continue;
+      const key = `${yr}-${fixed.getMonth()+1}`;
+      saldoMap[key] = s;
+      saldoMonthly.push({ year: yr, month: fixed.getMonth()+1,
+        label: fixed.toLocaleDateString('it-IT', {month:'short', year:'numeric'}), saldo: s });
+    }
+  }
+
+  // Add saldo to monthly records
+  monthly.forEach(m => {
+    m.saldo = saldoMap[`${m.year}-${m.month}`] || 0;
+  });
+
+  dbg.push(`Saldo monthly points: ${saldoMonthly.length}`);
+
+  // ── CARTA DI CREDITO MENSILE — tutte le voci ──
+  // Date row for carta = row idx 38 (SITUAZIONE CARTA DI CREDITO) cols 18+
+  // These dates are offset by ~1 month from conto (carta has day=10)
+  // We match by year+month to the main monthly array
+  // Row indices for carta monthly (verified):
+  //   idx 40 = MICROSOFT OFFICE
+  //   idx 41 = DISNEY PLUS
+  //   idx 42 = NETFLIX
+  //   idx 43 = DAZN
+  //   idx 44 = NOW TV
+  //   idx 45 = VIDEOGAMES
+  //   idx 46 = SPOTIFY
+  //   idx 47 = INTERNET
+  //   idx 48 = TELEFONO
+  //   idx 49 = AMAZON PRIME
+  //   idx 51 = IMPOSTA DI BOLLO
+  //   idx 52 = TOTALE SPESE FISSE carta
+  //   idx 55 = ACQUISTI GENERICI
+  //   idx 56 = RICARICHE TELEFONICHE
+  //   idx 57 = PRELIEVO CONTANTI (carta)
+  //   idx 58 = COMMISSIONI PRELIEVO
+  //   idx 59 = RIFORNIMENTI
+  //   idx 60 = COMMISSIONI RIFORNIMENTI
+  //   idx 61 = TOTALE SPESE VARIABILI carta
+  //   idx 30 = ADDEBITO CARTA (totale mensile)
+
+  const cartaDateRowIdx = findRow('situazione carta di credito');
+  const cartaMonthly = {};  // key: "year-month", value: object with all voci
+
+  if (cartaDateRowIdx >= 0) {
+    // Iterate using the monthly date row so keys match the monthly array
+    const dR = raw[monthDateRowIdx] || [];
+    const cartaRows = {
+      msOffice:    raw[findRow('microsoft office')] || [],
+      disneyPlus:  raw[findRow('disney plus')] || [],
+      netflix:     raw[findRow('netflix')] || [],
+      dazn:        raw[findRow('dazn')] || [],
+      nowTv:       raw[findRow('now tv')] || [],
+      videogames:  raw[findRow('videogames')] || [],
+      spotify:     raw[findRow('spotify')] || [],
+      internet:    raw[findRow('internet')] || [],
+      telefono:    raw[findRow('telefono')] || [],
+      amazonPrime: raw[findRow('amazon prime')] || [],
+      impBollo:    raw[findRow('imposta di bollo')] || [],
+      totFisse:    raw[findRow('totale spese fisse')] || [],
+      acqGenerici: raw[findRow('acquisti generici')] || [],
+      ricariche:   raw[findRow('ricariche telefoniche')] || [],
+      prelievo:    raw[findRow('prelievo contanti', cartaDateRowIdx)] || [],
+      commPrelievo:raw[findRow('commissioni prelievo')] || [],
+      rifornimenti:raw[findRow('rifornimenti')] || [],
+      commRif:     raw[findRow('commissioni rifornimenti')] || [],
+      totVar:      raw[findRow('totale spese variabili')] || [],
+      // MEDIA SPESE CARTA = total carta spend, indexed with carta dates (same as addebito in conto)
+      addebito:    raw[findRow('media spese carta di credito')] || [],
+    };
+
+    for (let c = 15; c < dR.length; c++) {
+      const dConto = dR[c];  // date from conto row (row 9, idx 8)
+      if (!(dConto instanceof Date)) continue;
+      const yr = dConto.getFullYear();
+      if (yr < 2015 || yr > 2045) continue;
+
+      // Same XLSX.js date fix on conto date
+      const fixedConto = new Date(dConto.getFullYear(), dConto.getMonth() + 1, 1);
+      const contoKey = `${fixedConto.getFullYear()}-${fixedConto.getMonth()+1}`;
+
+      // The carta date at the same column (row 39) tells us WHEN the spending happened
+      // e.g. conto col95 = 01/03/2026, carta col95 = 01/02/2026
+      // → spending happened in February, will be charged in March
+      const cartaDateRow = raw[cartaDateRowIdx] || [];
+      const dKarta = cartaDateRow[c];
+      // Carta date also has the XLSX.js -1 month bug, fix it
+      const fixedKarta = (dKarta instanceof Date)
+        ? new Date(dKarta.getFullYear(), dKarta.getMonth() + 1, 1)
+        : null;
+      const cartaSpendLabel = fixedKarta
+        ? fixedKarta.toLocaleDateString('it-IT', {month:'long', year:'numeric'})
+        : null;
+
+      const obj = { cartaSpendLabel };
+      Object.entries(cartaRows).forEach(([k, row]) => {
+        const v = row[c];
+        obj[k] = (v !== null && v !== undefined) ? toN(v) : null;
+      });
+      cartaMonthly[contoKey] = obj;
+    }
+  }
+
+  dbg.push(`Carta monthly keys: ${Object.keys(cartaMonthly).length}`);
+  console.log(dbg.join('\n'));
+
+  return {
+    years, cols,
+    rimanenzaIniziale, stipendio, tredicesima, totaleStipendio,
+    speseFisseCasa, rateAuto, spesaAssic, commCanone, telepass,
+    spesaGas, spesaLuce, prelievo, rateMensili, speseGeneriche,
+    totaleSpeseConto, entrateStraord, detrazioniIrpef, totaleEntrateExtra,
+    addebitoCarta, variazioneAnnua, marginePct, rimanenzaFinale,
+    msOffice, disneyPlus, netflix, dazn, nowTv, videogames, spotify,
+    internet, telefono, amazonPrime, abbGen, impBollo, totFisseCarta,
+    acqGenerici, totSpesVar,
+    monthly, saldoMonthly, cartaMonthly, val,
+  };
+}
+
+// ══════════════════════════════════════════════════════
+//  PARSING: Dettaglio Spese Generiche CC
+//  Builds D.acqCat — a lookup:
+//    D.acqCat[year][month] = { byTipologia: { 'BAR E RISTORANTI': 45.5, ... }, byCategoria: { 'COSTO SVAGHI': 45.5, ... } }
+//    D.acqCat[year]['_totale'] = { byTipologia: {...}, byCategoria: {...} }
+// ══════════════════════════════════════════════════════
+function parseAcqCategorie(wb) {
+  const shName = wb.SheetNames.find(n => n === 'Dettaglio Spese Generiche CC');
+  if (!shName) return {};
+
+  const ws = wb.Sheets[shName];
+  const raw = XLSX.utils.sheet_to_json(ws, { header:1, defval:null, raw:true });
+
+  // Nuova struttura colonne (0-based):
+  //   0 = TIPOLOGIA (nome esercente)
+  //   2 = ANNO
+  //   3 = MESE_NUM
+  //   6 = TIPOLOGIA SPESA (es. BAR E RISTORANTI, ACQUISTI ONLINE)
+  //   7 = CATEGORIA (es. COSTO SVAGHI, COSTO SFIZI, COSTO SOPRAVVIVENZA)
+  //   8 = IMPORTO
+  const result = {};  // result[year][month] = { byTipologia: {}, byCategoria: {} }
+
+  for (let r = 1; r < raw.length; r++) {
+    const row = raw[r];
+    if (!row) continue;
+    const tipologia = row[6] != null ? String(row[6]).trim() : null;
+    const categoria = row[7] != null ? String(row[7]).trim() : null;
+    const anno  = typeof row[2] === 'number' ? row[2] : parseInt(row[2]);
+    const mese  = typeof row[3] === 'number' ? row[3] : parseInt(row[3]);
+    const imp   = typeof row[8] === 'number' ? row[8] : parseFloat(row[8]) || 0;
+    if (!tipologia || isNaN(anno) || isNaN(mese) || imp === 0) continue;
+
+    if (!result[anno]) result[anno] = {};
+    if (!result[anno][mese]) result[anno][mese] = { byTipologia: {}, byCategoria: {} };
+
+    const m = result[anno][mese];
+    m.byTipologia[tipologia] = (m.byTipologia[tipologia] || 0) + imp;
+    if (categoria) {
+      m.byCategoria[categoria] = (m.byCategoria[categoria] || 0) + imp;
+    }
+  }
+
+  // Build yearly totals
+  Object.keys(result).forEach(yr => {
+    const totTip = {}, totCat = {};
+    Object.keys(result[yr]).forEach(mo => {
+      if (mo === '_totale') return;
+      const m = result[yr][mo];
+      Object.entries(m.byTipologia).forEach(([k, v]) => { totTip[k] = (totTip[k] || 0) + v; });
+      Object.entries(m.byCategoria).forEach(([k, v]) => { totCat[k] = (totCat[k] || 0) + v; });
+    });
+    result[yr]['_totale'] = { byTipologia: totTip, byCategoria: totCat };
+  });
+
+  return result;
+}
+
+// ══════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════
+function yi(year) { return D.years.indexOf(year); }
+function gv(arr, year) { const i = yi(year); return i >= 0 ? (arr[i] ?? 0) : 0; }
+
+function euro(v, short = false) {
+  if (v === null || v === undefined) return '—';
+  const x = parseFloat(v);
+  if (isNaN(x)) return '—';
+  if (short && Math.abs(x) >= 1000) return '€' + (x/1000).toFixed(1) + 'k';
+  return new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(x);
+}
+function pct(v)  { return isNaN(v) ? '—' : (v*100).toFixed(1)+'%'; }
+function sgn(v)  { return v >= 0 ? 'vp' : 'vn'; }
+
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
+function render() {
+  document.getElementById('empty').classList.add('hidden');
+  document.getElementById('dash').classList.remove('hidden');
+  buildPills();
+
+  // Apply section visibility based on current mode
+  ANNUAL_ONLY.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', SEL_MODE !== 'annual');
+  });
+  MONTHLY_ONLY.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', SEL_MODE !== 'monthly');
+  });
+
+  // Respect current mode
+  if (SEL_MODE === 'monthly') {
+    document.getElementById('kpis').classList.add('hidden');
+    document.getElementById('kpis-month').classList.remove('hidden');
+    document.getElementById('carta-banner').classList.remove('hidden');
+    document.getElementById('pills-month').classList.remove('hidden');
+    document.getElementById('btn-annual').classList.remove('on');
+    document.getElementById('btn-monthly').classList.add('on');
+    buildCartaBanner();
+    buildPillsMonth();
+    buildKPIMonth();
+  } else {
+    document.getElementById('kpis').classList.remove('hidden');
+    document.getElementById('kpis-month').classList.add('hidden');
+    document.getElementById('carta-banner').classList.add('hidden');
+    document.getElementById('pills-month').classList.add('hidden');
+    document.getElementById('btn-annual').classList.add('on');
+    document.getElementById('btn-monthly').classList.remove('on');
+    buildKPI();
+  }
+
+  buildAnnTable();
+  buildAbbs();
+  buildMonthTable();
+  buildCartaTable();
+  buildChartMonthly();
+  buildChartPie();
+  buildChartRisparmio();
+  buildChartCategorie();
+  buildChartGuadagno();
+  buildChartPctRisparmio();
+  buildKPIVal();
+  buildValTable();
+  buildChartProj();
+}
+
+function buildPills() {
+  const c = document.getElementById('pills');
+  c.innerHTML = '<span class="tb-label">Anno</span>';
+  const add = (lbl, val) => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (val === SEL ? ' on' : '');
+    b.textContent = lbl;
+    b.onclick = () => { SEL = val; render(); };
+    c.appendChild(b);
+  };
+  add('Tutti', 'all');
+  D.years.forEach(y => add(y, y));
+}
+
+// ── FIXED CARTA BANNER ──
+function buildCartaBanner() {
+  const el = document.getElementById('carta-banner');
+  if (!el) return;
+  const spesa  = D.spesaCarta      || null;
+  const budget = D.budgetRimanente || null;
+  if (!spesa && !budget) return;
+
+  const parseVal = str => parseFloat((str||'').replace(/[^\d,]/g,'').replace(',','.')) || 0;
+  const spesaNum  = parseVal(spesa);
+  const budgetNum = parseVal(budget);
+  const totale    = spesaNum + budgetNum;
+  const pctSpesa  = totale > 0 ? (spesaNum / totale * 100) : 0;
+  const pctStr    = pctSpesa.toFixed(1) + '%';
+
+  el.innerHTML = `
+    <div class="carta-banner-progress">
+      <div class="cbp-header">
+        <div class="cbp-title">Budget Carta di Credito</div>
+        <div class="cbp-total">${euro(totale)} <span>budget mensile totale</span></div>
+      </div>
+
+      <div class="cbp-bar-wrap">
+        <div class="cbp-bar-spent" style="width:${pctSpesa.toFixed(1)}%">
+          ${pctSpesa > 12 ? pctStr : ''}
+        </div>
+      </div>
+
+      <div class="cbp-labels">
+        <div class="cbp-label">
+          <div class="cbp-label-name" style="color:var(--orange)">💸 Speso</div>
+          <div class="cbp-label-val" style="color:var(--orange)">${spesa}</div>
+          <div class="cbp-label-sub">${pctStr} del budget</div>
+        </div>
+        <div class="cbp-label" style="text-align:center">
+          <div class="cbp-label-name" style="color:var(--muted)">Rimanente</div>
+          <div class="cbp-label-val" style="color:var(--text)">${(100 - pctSpesa).toFixed(1)}%</div>
+          <div class="cbp-label-sub">del budget disponibile</div>
+        </div>
+        <div class="cbp-label" style="text-align:right">
+          <div class="cbp-label-name" style="color:var(--green)">✅ Budget Rimasto</div>
+          <div class="cbp-label-val" style="color:var(--green)">${budget}</div>
+          <div class="cbp-label-sub">ancora disponibile</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── MODE TOGGLE ──
+// Elementi visibili solo in modalità ANNUALE
+const ANNUAL_ONLY = ['sec-ch-month','sec-ch-pie-risp','sec-divider-val','kpis-val',
+                     'sec-ch-cat','sec-ch-guad','sec-t-val','sec-t-ann','sec-t-carta','sec-ch-proj'];
+// Elementi visibili solo in modalità MENSILE
+const MONTHLY_ONLY = ['sec-carta-comp'];
+
+function setMode(mode) {
+  SEL_MODE = mode;
+  document.getElementById('btn-annual').classList.toggle('on', mode === 'annual');
+  document.getElementById('btn-monthly').classList.toggle('on', mode === 'monthly');
+
+  const monthPills = document.getElementById('pills-month');
+
+  // Sezioni annuali
+  ANNUAL_ONLY.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', mode !== 'annual');
+  });
+  // Sezioni mensili
+  MONTHLY_ONLY.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', mode !== 'monthly');
+  });
+  // sec-abbs-month: visibile in entrambe le modalità (abbonamenti + ultimi 18 mesi)
+  // non tocchiamo
+
+  if (mode === 'monthly') {
+    if (!SEL_MONTH && D.monthly.length > 0) {
+      const last = D.monthly[D.monthly.length - 1];
+      SEL_MONTH = `${last.year}-${String(last.month).padStart(2,'0')}`;
+      SEL = last.year;
+    }
+    monthPills.classList.remove('hidden');
+    document.getElementById('kpis').classList.add('hidden');
+    document.getElementById('kpis-month').classList.remove('hidden');
+    document.getElementById('carta-banner').classList.remove('hidden');
+    const cmd = document.getElementById('carta-month-detail');
+    if (cmd) cmd.style.display = '';
+    buildCartaBanner();
+    buildPillsMonth();
+    buildKPIMonth();
+  } else {
+    monthPills.classList.add('hidden');
+    document.getElementById('kpis').classList.remove('hidden');
+    document.getElementById('kpis-month').classList.add('hidden');
+    document.getElementById('carta-banner').classList.add('hidden');
+    // Nascondi il dettaglio mensile carta se presente
+    const cmd = document.getElementById('carta-month-detail');
+    if (cmd) cmd.style.display = 'none';
+    buildKPI();
+  }
+}
+
+// ── MONTH PILLS ──
+function buildPillsMonth() {
+  const c = document.getElementById('pills-month');
+  c.innerHTML = '<span class="tb-label">Mese</span>';
+
+  const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+  // Get months available for the selected year
+  const yr = SEL === 'all' ? null : SEL;
+  const available = D.monthly
+    .filter(m => !yr || m.year === yr)
+    .map(m => `${m.year}-${String(m.month).padStart(2,'0')}`);
+
+  // If year changed, reset to last month of that year
+  if (yr && !available.includes(SEL_MONTH)) {
+    SEL_MONTH = available[available.length - 1];
+  }
+
+  available.forEach(key => {
+    const [y, mo] = key.split('-');
+    const b = document.createElement('button');
+    b.className = 'pill' + (key === SEL_MONTH ? ' on' : '');
+    b.textContent = `${MESI[parseInt(mo)-1]} ${y}`;
+    b.onclick = () => { SEL_MONTH = key; buildPillsMonth(); buildKPIMonth(); };
+    c.appendChild(b);
+  });
+}
+
+// ── MONTHLY KPI ──
+function buildKPIMonth() {
+  if (!SEL_MONTH) return;
+  const [yr, mo] = SEL_MONTH.split('-').map(Number);
+
+  const cur    = D.monthly.find(m => m.year === yr && m.month === mo);
+  const prev   = D.monthly.find(m => m.year === yr-1 && m.month === mo);
+  const prevMo = D.monthly.find(m => mo === 1 ? (m.year === yr-1 && m.month === 12) : (m.year === yr && m.month === mo-1));
+
+  if (!cur) { document.getElementById('kpis-month').innerHTML = '<p style="color:var(--muted);grid-column:1/-1">Nessun dato per questo mese.</p>'; return; }
+
+  const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const label = `${MESI[mo-1]} ${yr}`;
+
+  function tr(curr, ref, lbl) {
+    if (!ref && ref !== 0) return '';
+    const d = curr - ref;
+    return `<div class="kpi-trend ${d>=0?'up':'dn'}">${d>=0?'▲':'▼'} ${euro(Math.abs(d))} vs ${lbl}</div>`;
+  }
+
+  // Render fixed banner (Spesa Carta + Budget Rimanente)
+  buildCartaBanner();
+
+  const fixedCards = [];
+  const cards = [
+    { lbl:`📥 Entrate — ${label}`,  val:euro(cur.entrate), cls:'blu',
+      sub: prev ? `Stesso mese ${yr-1}: ${euro(prev.entrate)}` : `Mese prec.: ${euro(prevMo?.entrate??0)}`,
+      trend: tr(cur.entrate, prev?.entrate, `${MESI[mo-1]} ${yr-1}`), c:'c1' },
+    { lbl:`💸 Uscite — ${label}`,   val:euro(cur.uscite),  cls:'ora',
+      sub: prev ? `Stesso mese ${yr-1}: ${euro(prev.uscite)}` : '',
+      trend: tr(cur.uscite, prev?.uscite, `${MESI[mo-1]} ${yr-1}`), c:'c2' },
+    { lbl:`📈 Margine — ${label}`,  val:euro(cur.margine), cls:cur.margine>=0?'pos':'neg',
+      sub: prevMo ? `Mese prec.: ${euro(prevMo.margine)}` : '',
+      trend: tr(cur.margine, prev?.margine, `${MESI[mo-1]} ${yr-1}`), c:'c0' },
+    { lbl:`🏦 Saldo Conto — ${label}`, val:euro(cur.saldo), cls:'sal',
+      sub: prevMo?.saldo ? `Mese prec.: ${euro(prevMo.saldo)}` : '',
+      trend: tr(cur.saldo, prevMo?.saldo, 'mese prec.'), c:'c3' },
+  ];
+
+  document.getElementById('kpis-month').innerHTML = cards.map(k=>`
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      ${k.trend}
+    </div>`).join('');
+
+  // ── CARTA DI CREDITO DETAIL ──
+  buildCartaMonthDetail(yr, mo, label);
+  buildChartCartaComp(yr, mo, label);
+}
+
+// ── GRAFICO COMPOSIZIONE CARTA (vista mensile) ──
+function buildChartCartaComp(yr, mo, label) {
+  const months_it = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
+                     'luglio','agosto','settembre','ottobre','novembre','dicembre'];
+
+  // Resolve spend month (same logic as category lookup)
+  const carta = D.cartaMonthly ? D.cartaMonthly[`${yr}-${mo}`] : null;
+  let spendMo = mo, spendYr = yr;
+  if (carta && carta.cartaSpendLabel) {
+    const parts = carta.cartaSpendLabel.toLowerCase().split(' ');
+    const idx = months_it.indexOf(parts[0]);
+    const y   = parseInt(parts[1]);
+    if (idx >= 0 && !isNaN(y)) { spendMo = idx + 1; spendYr = y; }
+  }
+
+  // Lookup category data with fallback — usa byTipologia per il grafico di dettaglio
+  const _getMonth = (yr, mo) => D.acqCat && D.acqCat[yr] && D.acqCat[yr][mo]
+    ? D.acqCat[yr][mo].byTipologia : null;
+  let cats = _getMonth(spendYr, spendMo);
+  if (!cats && D.acqCat) {
+    const prevMo = spendMo === 1 ? 12 : spendMo - 1;
+    const prevYr = spendMo === 1 ? spendYr - 1 : spendYr;
+    cats = _getMonth(prevYr, prevMo);
+  }
+
+  // Abbonamenti fissi per il mese
+  const ABB_NAMES = ['Microsoft Office','Disney Plus','Netflix','DAZN','NOW TV',
+                     'Videogames','Spotify','Internet','Telefono','Amazon Prime',
+                     'Abb. Generici','Imp. Bollo'];
+  const ABB_KEYS  = ['msOffice','disneyPlus','netflix','dazn','nowTv',
+                     'videogames','spotify','internet','telefono','amazonPrime',
+                     'abbGen','impBollo'];
+  const COLORS_FISSE = ['#58a6ff','#bc8cff','#3fb950','#f78166','#e3b341',
+                        '#ff7b72','#79c0ff','#d2a8ff','#56d364','#ffa657',
+                        '#6e7681','#8b949e'];
+  const COLORS_ACQ   = ['#f97316','#fb923c','#fdba74','#fed7aa','#e3b341',
+                        '#fbbf24','#d97706','#b45309','#92400e','#78350f',
+                        '#ef4444','#dc2626','#b91c1c','#991b1b','#7f1d1d',
+                        '#f43f5e','#e11d48','#be123c','#9f1239','#881337',
+                        '#a855f7','#9333ea','#7c3aed','#6d28d9'];
+
+  // Build fisse data
+  const fisseLabels = [], fisseVals = [], fisseColors = [];
+  ABB_NAMES.forEach((name, i) => {
+    const v = carta ? (carta[ABB_KEYS[i]] ?? 0) : 0;
+    if (v > 0) { fisseLabels.push(name); fisseVals.push(v); fisseColors.push(COLORS_FISSE[i]); }
+  });
+
+  // Build acq data
+  const acqLabels = [], acqVals = [], acqColors = [];
+  if (cats) {
+    Object.entries(cats)
+      .filter(([,v]) => v > 0)
+      .sort(([,a],[,b]) => b - a)
+      .forEach(([cat, v], i) => {
+        acqLabels.push(cat.charAt(0) + cat.slice(1).toLowerCase());
+        acqVals.push(Math.round(v));
+        acqColors.push(COLORS_ACQ[i % COLORS_ACQ.length]);
+      });
+  }
+
+  document.getElementById('carta-comp-yr').textContent = label;
+  document.getElementById('carta-comp-acq-yr').textContent = label;
+
+  const pie_opts = {
+    responsive: true, maintainAspectRatio: true,
+    plugins: {
+      legend: { position:'right', labels:{ color:'#8b949e', font:{family:'DM Sans',size:11}, boxWidth:10, padding:8 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${euro(ctx.parsed)}` }}
+    }
+  };
+
+  // Fisse chart
+  if (CH['carta-fisse']) { CH['carta-fisse'].destroy(); delete CH['carta-fisse']; }
+  if (fisseVals.length > 0) {
+    CH['carta-fisse'] = new Chart(document.getElementById('ch-carta-fisse'), {
+      type: 'doughnut',
+      data: { labels: fisseLabels, datasets:[{ data: fisseVals, backgroundColor: fisseColors, borderWidth:0 }] },
+      options: pie_opts
+    });
+  }
+
+  // Acq chart
+  if (CH['carta-acq']) { CH['carta-acq'].destroy(); delete CH['carta-acq']; }
+  if (acqVals.length > 0) {
+    CH['carta-acq'] = new Chart(document.getElementById('ch-carta-acq'), {
+      type: 'doughnut',
+      data: { labels: acqLabels, datasets:[{ data: acqVals, backgroundColor: acqColors, borderWidth:0 }] },
+      options: pie_opts
+    });
+  }
+}
+
+function buildCartaMonthDetail(yr, mo, label) {
+  // After fixing the conto date offset, month M in the conto = spending month M.
+  // The carta section also uses month M as the spending month.
+  // So we look up the carta detail with the same key.
+  const key = `${yr}-${mo}`;
+  const carta = D.cartaMonthly ? D.cartaMonthly[key] : null;
+
+  // Find or create the carta monthly detail container
+  let el = document.getElementById('carta-month-detail');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'carta-month-detail';
+    el.className = 'sec';
+    // Insert after kpis-month
+    const kpisMonth = document.getElementById('kpis-month');
+    kpisMonth.parentNode.insertBefore(el, kpisMonth.nextSibling);
+  }
+
+  if (!carta) { el.innerHTML = ''; return; }
+
+  // cartaSpendLabel = the month when spending happened (from row 39)
+  const spendLabel = carta.cartaSpendLabel
+    ? `spese di ${carta.cartaSpendLabel}, addebitate in ${label}`
+    : label;
+
+  const ABBONAMENTI = [
+    ['Microsoft Office', carta.msOffice],
+    ['Disney Plus',      carta.disneyPlus],
+    ['Netflix',          carta.netflix],
+    ['DAZN',             carta.dazn],
+    ['NOW TV',           carta.nowTv],
+    ['Videogames',       carta.videogames],
+    ['Spotify',          carta.spotify],
+    ['Internet',         carta.internet],
+    ['Telefono',         carta.telefono],
+    ['Amazon Prime',     carta.amazonPrime],
+    ['Imp. Bollo',       carta.impBollo],
+  ].filter(([,v]) => v !== null && v > 0);
+
+  const VARIABILI = [
+    ['Acquisti Generici',   carta.acqGenerici, 'acq-generici'],
+    ['Ricariche Tel.',      carta.ricariche, null],
+    ['Prelievo Contanti',   carta.prelievo, null],
+    ['Comm. Prelievo',      carta.commPrelievo, null],
+    ['Rifornimenti',        carta.rifornimenti, null],
+    ['Comm. Rifornimenti',  carta.commRif, null],
+  ].filter(([,v]) => v !== null && v > 0);
+
+  const totFisse = carta.totFisse ?? ABBONAMENTI.reduce((s,[,v])=>s+(v||0),0);
+  const totVar   = carta.totVar   ?? VARIABILI.reduce((s,[,v])=>s+(v||0),0);
+  const totale   = carta.addebito ?? (totFisse + totVar);
+
+  el.innerHTML = `
+    <div class="sec-hd">
+      <span class="sec-title">💳 Carta di Credito — ${spendLabel}</span>
+    </div>
+    <div class="tcard">
+      <table><tbody>
+        <tr class="acq-toggle-row" onclick="toggleAcqRow(this)">
+          <td><span class="acq-toggle-btn" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--blue)">Spese Fisse</span></td>
+          <td style="text-align:right;font-size:10px;font-weight:700;color:var(--blue)">${euro(totFisse)}</td>
+        </tr>
+        ${ABBONAMENTI.map(([n,v])=>`<tr class="acq-sub-row" style="display:none" data-acq-sub><td>${n}</td><td style="text-align:right">${euro(v)}</td></tr>`).join('')}
+        ${ABBONAMENTI.length === 0 ? `<tr class="acq-sub-row" style="display:none" data-acq-sub><td colspan="2" style="color:var(--faint);text-align:center;padding:12px">Nessuna spesa fissa</td></tr>` : ''}
+        ${(() => {
+          // Riga separatore sezione variabili (solo visiva, non cliccabile)
+          const otherVar = VARIABILI.filter(([,, id]) => id !== 'acq-generici');
+          const acqRow   = VARIABILI.find(([,, id]) => id === 'acq-generici');
+
+          // Lookup categorie acquisti — usa byTipologia per il dettaglio
+          const cats = (acqRow && D.acqCat && carta.cartaSpendLabel)
+            ? (() => {
+                const months_it = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
+                                   'luglio','agosto','settembre','ottobre','novembre','dicembre'];
+                const lbl = (carta.cartaSpendLabel || '').toLowerCase();
+                const parts = lbl.split(' ');
+                const moIdx = months_it.indexOf(parts[0]);
+                const yrNum = parseInt(parts[1]);
+                if (moIdx < 0 || isNaN(yrNum)) return null;
+                const get = (y, m) => D.acqCat[y] && D.acqCat[y][m] ? D.acqCat[y][m].byTipologia : null;
+                return get(yrNum, moIdx+1)
+                  || get(moIdx === 0 ? yrNum-1 : yrNum, moIdx === 0 ? 12 : moIdx);
+              })()
+            : null;
+
+          let out = '';
+
+          // Acquisti Generici come riga-header sezione variabili (stesso stile di Spese Fisse)
+          if (acqRow) {
+            const [n, v] = acqRow;
+            const subRows = cats ? Object.entries(cats)
+              .filter(([,val]) => val > 0)
+              .sort(([,a],[,b]) => b - a)
+              .map(([cat, val]) =>
+                `<tr class="acq-sub-row" style="display:none" data-acq-sub>
+                  <td>↳ ${cat.charAt(0)+cat.slice(1).toLowerCase()}</td>
+                  <td style="text-align:right">${euro(val)}</td>
+                </tr>`).join('') : '';
+            out += `<tr class="acq-toggle-row" onclick="toggleAcqRow(this)" style="border-top:1px solid var(--border)">
+              <td><span class="acq-toggle-btn" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--orange)">${n}</span></td>
+              <td style="text-align:right;font-size:10px;font-weight:700;color:var(--orange)">${euro(v)}</td>
+            </tr>${subRows}`;
+          }
+
+          // Altre voci variabili (ricariche, prelievi, ecc.) come sub-row semplici sotto la sezione
+          otherVar.forEach(([n, v]) => {
+            out += `<tr class="acq-sub-row" style="display:none" data-acq-sub><td>${n}</td><td style="text-align:right">${euro(v)}</td></tr>`;
+          });
+
+          if (VARIABILI.length === 0) {
+            out += `<tr><td colspan="2" style="color:var(--faint);text-align:center;padding:12px;border-top:1px solid var(--border)">Nessuna spesa variabile</td></tr>`;
+          }
+          return out;
+        })()}
+      </tbody></table>
+    </div>
+    <div style="margin-top:10px;background:rgba(88,166,255,.08);border:1px solid var(--blue);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:12px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.5px">Totale Carta di Credito</span>
+      <span style="font-family:'DM Sans',sans-serif;font-size:22px;color:var(--blue)">${euro(totale)}</span>
+    </div>`;
+}
+
+function buildKPI() {
+  const yr   = SEL === 'all' ? D.years[D.years.length-1] : SEL;
+  const ric  = gv(D.rimanenzaFinale, yr);
+  const stip = gv(D.totaleStipendio, yr);
+  const cart = gv(D.addebitoCarta, yr);
+  const conto= gv(D.totaleSpeseConto, yr);
+  const marg = gv(D.marginePct, yr);
+  const vary = gv(D.variazioneAnnua, yr);
+  const pi   = yi(yr) - 1;
+  const pRic = pi >= 0 ? D.rimanenzaFinale[pi] : null;
+  const pMrg = pi >= 0 ? D.marginePct[pi] : null;
+
+  document.getElementById('kpis').innerHTML = [
+    { lbl:`💰 Rimanenza Finale ${yr}`, val:euro(ric), cls:ric>=0?'pos':'neg',
+      sub:`Saldo conto a fine anno`,
+      tr: pRic!=null ? `${(ric-pRic)>=0?'▲':'▼'} ${euro(Math.abs(ric-pRic))} vs anno prec.` : null,
+      tc:(ric-(pRic??ric))>=0?'up':'dn', c:'c0' },
+    { lbl:`📥 Totale Stipendio ${yr}`, val:euro(stip), cls:'blu',
+      sub:`Media mensile ${euro(stip/12)}`, tr:null, c:'c1' },
+    { lbl:`💸 Spese Conto ${yr}`,      val:euro(conto), cls:'ora',
+      sub:`Media mensile ${euro(conto/12)}`, tr:null, c:'c2' },
+    { lbl:`💳 Carta di Credito ${yr}`, val:euro(cart), cls:'ora',
+      sub:`Media mensile ${euro(cart/12)}`, tr:null, c:'c3' },
+    { lbl:`📈 Margine % ${yr}`,        val:pct(marg), cls:marg>=0?'pos':'neg',
+      sub:`Variazione: ${vary>=0?'+':''}${euro(vary)}`,
+      tr: pMrg!=null ? `${(marg-pMrg)>=0?'▲':'▼'} ${pct(Math.abs(marg-pMrg))} vs anno prec.` : null,
+      tc:(marg-(pMrg??marg))>=0?'up':'dn', c:'c4' },
+  ].map(k => `
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      ${k.tr ? `<div class="kpi-trend ${k.tc}">${k.tr}</div>` : ''}
+    </div>`).join('');
+}
+
+function buildAnnTable() {
+  const yrs = SEL === 'all' ? D.years : [SEL];
+  const rows = [
+    ['Rimanenza Iniziale',    D.rimanenzaIniziale,  ''],
+    ['Stipendio Mensile',     D.stipendio,          ''],
+    ['Tredicesima + Premio',  D.tredicesima,        ''],
+    ['TOTALE STIPENDIO',      D.totaleStipendio,    'rT rI'],
+    ['— Spese Fisse Casa',    D.speseFisseCasa,     ''],
+    ['— Spese Fisse Auto',           D.rateAuto,           ''],
+    ['— Spesa Gas',           D.spesaGas,           ''],
+    ['— Spesa Luce',          D.spesaLuce,          ''],
+    ['— Telepass',            D.telepass,           ''],
+    ['— Comm. Canone',        D.commCanone,         ''],
+    ['— Assicurazione',       D.spesaAssic,         ''],
+    ['— Prelievo Contanti',   D.prelievo,           ''],
+    ['— Rate Mensili Varie',  D.rateMensili,        ''],
+    ['— Spese Generiche',     D.speseGeneriche,     ''],
+    ['TOTALE SPESE CONTO',    D.totaleSpeseConto,   'rT rE'],
+    ['+ Entrate Straord.',    D.entrateStraord,     'rH'],
+    ['+ Detrazioni IRPEF',    D.detrazioniIrpef,    'rH'],
+    ['TOTALE ENTRATE EXTRA',  D.totaleEntrateExtra, 'rT'],
+    ['— Addebito Carta',      D.addebitoCarta,      'rH rE'],
+    ['Variazione Annua',      D.variazioneAnnua,    'rT', 'signed'],
+    ['Margine %',             D.marginePct,         'rH',  'pct'],
+    ['RIMANENZA FINALE',      D.rimanenzaFinale,    'rF'],
+  ];
+  let h = `<thead><tr><th>Voce</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(([lbl, arr, cls, fmt]) => {
+    h += `<tr class="${cls}"><td>${lbl}</td>`;
+    yrs.forEach(yr => {
+      const i = yi(yr), v = i >= 0 ? arr[i] : 0;
+      let d='', vc='';
+      if (fmt==='pct')    { d=pct(v); vc=sgn(v); }
+      else if(fmt==='signed'){ d=(v>=0?'+':'')+euro(v); vc=sgn(v); }
+      else d = euro(v);
+      h += `<td class="${vc}">${d}</td>`;
+    });
+    h += '</tr>';
+  });
+  document.getElementById('t-ann').innerHTML = h + '</tbody>';
+}
+
+function buildAbbs() {
+  const yr = SEL === 'all' ? D.years[D.years.length-1] : SEL;
+  document.getElementById('abb-yr').textContent = yr;
+
+  // Format monthly with 2 decimals, strip trailing .00
+  function fmtMensile(annual) {
+    const m = annual / 12;
+    // Show 2 decimals only if needed
+    const rounded = Math.round(m * 100) / 100;
+    if (rounded === Math.floor(rounded)) return String(Math.round(rounded));
+    return rounded.toFixed(2).replace('.', ',');
+  }
+
+  function fmtAnnual(v) {
+    return new Intl.NumberFormat('it-IT', {style:'currency', currency:'EUR', maximumFractionDigits: v % 1 === 0 ? 0 : 2}).format(v);
+  }
+
+  const items = [
+    ['Microsoft Office', D.msOffice],
+    ['Disney Plus',      D.disneyPlus],
+    ['Netflix',          D.netflix],
+    ['DAZN',             D.dazn],
+    ['NOW TV',           D.nowTv],
+    ['Videogames',       D.videogames],
+    ['Spotify',          D.spotify],
+    ['Internet',         D.internet],
+    ['Telefono',         D.telefono],
+    ['Amazon Prime',     D.amazonPrime],
+    ['Abb. Generici',    D.abbGen],
+    ['Imposta di Bollo', D.impBollo],
+  ];
+
+  const tot = gv(D.totFisseCarta, yr);
+
+  let h = items.map(([name, arr]) => {
+    const ann = gv(arr, yr);
+    if (!ann || ann === 0) return ''; // hide zero abbonamenti
+    return `<div class="abb">
+      <div class="abb-n">${name}</div>
+      <div class="abb-row">
+        <span class="abb-val">${fmtMensile(ann)}</span>
+        <span class="abb-unit">€/mese</span>
+      </div>
+      <div class="abb-annual">${fmtAnnual(ann)} / anno</div>
+    </div>`;
+  }).join('');
+
+  // Totale tile
+  h += `<div class="abb tot">
+    <div class="abb-n">Totale Fisso</div>
+    <div class="abb-row">
+      <span class="abb-val">${fmtMensile(tot)}</span>
+      <span class="abb-unit">€/mese</span>
+    </div>
+    <div class="abb-annual">${fmtAnnual(tot)} / anno</div>
+  </div>`;
+
+  document.getElementById('abbs').innerHTML = h;
+}
+
+function buildMonthTable() {
+  const data = (SEL === 'all' ? D.monthly : D.monthly.filter(m => m.year === SEL)).slice(-18);
+  let h = `<thead><tr><th>Mese</th><th>Entrate</th><th>Uscite</th><th>Margine</th></tr></thead><tbody>`;
+  data.forEach(m => {
+    const mc = sgn(m.margine);
+    h += `<tr><td>${m.label}</td><td>${euro(m.entrate)}</td><td>${euro(m.uscite)}</td>
+      <td class="${mc}">${m.margine>=0?'+':''}${euro(m.margine)}</td></tr>`;
+  });
+  document.getElementById('t-month').innerHTML = h + '</tbody>';
+}
+
+function toggleAcqRow(tr) {
+  const btn = tr.querySelector('.acq-toggle-btn');
+  btn.classList.toggle('open');
+  const isOpen = btn.classList.contains('open');
+  const isNested = tr.hasAttribute('data-acq-sub');
+  let next = tr.nextElementSibling;
+  while (next && next.hasAttribute('data-acq-sub')) {
+    // For a nested toggle row, only show direct nested children (data-acq-nested)
+    // For a top-level toggle, show all sub-rows but hide nested ones unless their parent is open
+    if (isNested) {
+      // Toggling "Acquisti Generici" sub-row: manage only data-acq-nested rows
+      if (next.hasAttribute('data-acq-nested')) {
+        next.style.display = isOpen ? '' : 'none';
+      } else {
+        break; // stop at non-nested sub-rows (they belong to parent toggle)
+      }
+    } else {
+      // Toggling a top-level section: show/hide all direct sub-rows
+      // but reset nested rows to hidden when collapsing
+      if (next.hasAttribute('data-acq-nested')) {
+        // nested rows: only show if parent (acq-generici toggle) is also open
+        next.style.display = 'none';
+      } else {
+        next.style.display = isOpen ? '' : 'none';
+        // if collapsing, also reset nested toggle button
+        if (!isOpen && next.classList.contains('acq-toggle-row')) {
+          const nestedBtn = next.querySelector('.acq-toggle-btn');
+          if (nestedBtn) nestedBtn.classList.remove('open');
+        }
+      }
+    }
+    next = next.nextElementSibling;
+  }
+}
+
+function buildCartaTable() {
+  const yrs = SEL === 'all' ? D.years : [SEL];
+
+  // Sottovoci spese fisse
+  const fixedItems = [
+    ['Microsoft Office', D.msOffice],
+    ['Disney Plus',      D.disneyPlus],
+    ['Netflix',          D.netflix],
+    ['DAZN',             D.dazn],
+    ['NOW TV',           D.nowTv],
+    ['Videogames',       D.videogames],
+    ['Spotify',          D.spotify],
+    ['Internet',         D.internet],
+    ['Telefono',         D.telefono],
+    ['Amazon Prime',     D.amazonPrime],
+    ['Abb. Generici',    D.abbGen],
+    ['Imposta di Bollo', D.impBollo],
+  ];
+
+  // Sottovoci acquisti generici per anno — usa byTipologia
+  const allCats = {};
+  if (D.acqCat) {
+    yrs.forEach(yr => {
+      const yearData = D.acqCat[yr];
+      if (!yearData || !yearData['_totale']) return;
+      Object.entries(yearData['_totale'].byTipologia || {}).forEach(([cat, v]) => {
+        allCats[cat] = (allCats[cat] || 0) + v;
+      });
+    });
+  }
+  const sortedCats = Object.entries(allCats).sort(([,a],[,b]) => b - a).map(([cat]) => cat);
+
+  let h = `<thead><tr><th>Voce</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
+
+  const mkCells = (arr) => yrs.map(yr => { const i=yi(yr); return `<td>${euro(i>=0?(arr[i]??0):0)}</td>`; }).join('');
+
+  // ── SPESE FISSE toggle ──
+  h += `<tr class="acq-toggle-row rT rE" onclick="toggleAcqRow(this)">
+    <td><span class="acq-toggle-btn">Spese Fisse Carta</span></td>${mkCells(D.totFisseCarta)}</tr>`;
+  fixedItems.forEach(([lbl, arr]) => {
+    h += `<tr class="acq-sub-row" style="display:none" data-acq-sub><td>${lbl}</td>${mkCells(arr)}</tr>`;
+  });
+
+  // ── SPESE VARIABILI toggle ──
+  h += `<tr class="acq-toggle-row rT" onclick="toggleAcqRow(this)" style="border-top:2px solid var(--border)">
+    <td><span class="acq-toggle-btn">Spese Variabili Carta</span></td>${mkCells(D.totSpesVar)}</tr>`;
+
+  // Acquisti generici (nested toggle dentro variabili)
+  h += `<tr class="acq-sub-row acq-toggle-row" style="display:none" data-acq-sub onclick="toggleAcqRow(this)">
+    <td><span class="acq-toggle-btn">↳ Acquisti Generici</span></td>${mkCells(D.acqGenerici)}</tr>`;
+  if (sortedCats.length > 0) {
+    sortedCats.forEach(cat => {
+      h += `<tr class="acq-sub-row" style="display:none" data-acq-sub data-acq-nested>`;
+      h += `<td style="padding-left:48px !important">↳ ${cat.charAt(0)+cat.slice(1).toLowerCase()}</td>`;
+      yrs.forEach(yr => {
+        const v = D.acqCat[yr] && D.acqCat[yr]['_totale']
+          ? (D.acqCat[yr]['_totale'].byTipologia[cat] || 0) : 0;
+        h += `<td>${v > 0 ? euro(v) : '—'}</td>`;
+      });
+      h += '</tr>';
+    });
+  }
+
+  // ── TOTALE ──
+  h += `<tr class="rF"><td>TOTALE CARTA DI CREDITO</td>${mkCells(D.addebitoCarta)}</tr>`;
+
+  document.getElementById('t-carta').innerHTML = h + '</tbody>';
+}
+
+// ══════════════════════════════════════════════════════
+//  CHARTS
+// ══════════════════════════════════════════════════════
+const isMobile = window.innerWidth <= 480;
+
+const COPTS = {
+  responsive:true, maintainAspectRatio:true,
+  plugins:{ legend:{ labels:{ color:'#8b949e', font:{family:'DM Sans',size: isMobile ? 10 : 11}, boxWidth:10, padding: isMobile ? 8 : 14 }}},
+  scales:{
+    x:{ ticks:{color:'#4a5272',font:{family:'DM Sans',size: isMobile ? 9 : 10}, maxTicksLimit: isMobile ? 6 : 18, maxRotation: isMobile ? 45 : 35}, grid:{color:'rgba(48,54,61,.5)'}, border:{color:'transparent'} },
+    y:{ ticks:{color:'#4a5272',font:{family:'DM Sans',size: isMobile ? 9 : 10},callback:v=>euro(v,true)}, grid:{color:'rgba(48,54,61,.5)'}, border:{color:'transparent'} },
+  }
+};
+
+function kill(id) { if(CH[id]){ CH[id].destroy(); delete CH[id]; } }
+
+function buildChartMonthly() {
+  kill('m');
+  const data = SEL === 'all' ? D.monthly : D.monthly.filter(m => m.year === SEL);
+  if (!data.length) return;
+  CH.m = new Chart(document.getElementById('ch-month'), {
+    type:'line',
+    data:{ labels:data.map(m => isMobile ? `${m.month}/${String(m.year).slice(2)}` : m.label), datasets:[
+      { label:'Entrate', data:data.map(m=>m.entrate), borderColor:'#3fb950', backgroundColor:'rgba(63,185,80,.07)', tension:.4, borderWidth:2, pointRadius:data.length>36?1:2 },
+      { label:'Uscite',  data:data.map(m=>m.uscite),  borderColor:'#f78166', backgroundColor:'rgba(247,129,102,.07)', tension:.4, borderWidth:2, pointRadius:data.length>36?1:2 },
+      { label:'Margine', data:data.map(m=>m.margine), borderColor:'#58a6ff', backgroundColor:'rgba(88,166,255,.07)', tension:.4, borderWidth:1.5, pointRadius:data.length>36?1:2, borderDash:[4,3] },
+    ]},
+    options:{ ...COPTS, interaction:{mode:'index',intersect:false},
+      plugins:{...COPTS.plugins, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${euro(c.raw)}`}}} }
+  });
+}
+
+function buildChartRisparmio() {
+  kill('risp');
+  if (!D.val) return;
+  const V = D.val;
+  const yrs = V.years;
+  const op  = V.risparmioOp;
+  const com = V.risparmioCom;
+  CH.risp = new Chart(document.getElementById('ch-risparmio'), {
+    type: 'bar',
+    data: { labels: yrs.map(String), datasets: [
+      { label: 'Risparmio Operativo', data: op,
+        backgroundColor: op.map(v => v>=0 ? 'rgba(63,185,80,.75)' : 'rgba(255,123,114,.75)'),
+        borderRadius: 5, borderWidth: 0 },
+      { label: 'Risparmio Complessivo', data: com,
+        backgroundColor: com.map(v => v>=0 ? 'rgba(88,166,255,.5)' : 'rgba(247,129,102,.5)'),
+        borderRadius: 5, borderWidth: 0 },
+    ]},
+    options: { ...COPTS, plugins: { ...COPTS.plugins,
+      tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${euro(c.raw)}/mese` } }
+    }}
+  });
+}
+
+function buildKPIVal() {
+  if (!D.val) { document.getElementById('kpis-val').innerHTML = '<p style="color:var(--muted);font-size:12px">Foglio "Valutazione Spese e Risparmi" non trovato nel file.</p>'; return; }
+  const V = D.val;
+  const yr  = SEL === 'all' ? V.years[V.years.length-1] : SEL;
+  const vi  = V.years.indexOf(yr);
+  if (vi < 0) return;
+
+  const tot      = V.totale[vi];
+  const guFisso  = V.guadagnoFisso[vi];
+  const guVar    = V.guadagnoVar[vi];
+  const guTot    = guFisso + guVar;
+  const rispOp   = V.risparmioOp[vi];
+  const rispCom  = V.risparmioCom[vi];
+  const pctR     = V.pctRisparmio[vi];
+  const altreNC  = V.altreSpeseNC[vi];
+
+  // biggest category
+  const cats = [
+    ['Mobilità', V.costoMob[vi]], ['Casa', V.costoCasa[vi]], ['Sopravvivenza', V.costoSoprav[vi]],
+    ['Abbonamenti', V.costoAbb[vi]], ['Svaghi', V.costoSvaghi[vi]], ['Vacanze', V.costoVacanze[vi]],
+    ['Sfizi', V.costoSfizi[vi]], ['Movimenti Conto', V.movimentiConto[vi]],
+  ].sort((a,b) => b[1]-a[1]);
+  const topCat = cats[0];
+
+  document.getElementById('kpis-val').innerHTML = [
+    { lbl:`💸 Totale Spese Mensili ${yr}`, val:euro(tot), cls:'ora',
+      sub:`Media di tutte le categorie`, c:'c2' },
+    { lbl:`📥 Guadagno Medio Mensile ${yr}`, val:euro(guTot), cls:'blu',
+      sub:`Fisso ${euro(guFisso)} + Variabile ${euro(guVar)}`, c:'c1' },
+    { lbl:`🏆 Top Categoria Spesa ${yr}`, val:topCat[0], cls:'neu',
+      sub:`${euro(topCat[1])}/mese`, c:'c3' },
+    { lbl:`💚 Risparmio Operativo ${yr}`, val:euro(rispOp), cls:rispOp>=0?'pos':'neg',
+      sub:`Senza spese non catalogate`, c:'c1' },
+    { lbl:`📈 % Risparmio ${yr}`, val:pct(pctR), cls:pctR>=0?'pos':'neg',
+      sub:`Risparmio complessivo ${euro(rispCom)}/mese`, c:'c4' },
+  ].map(k => `
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+function buildChartCategorie() {
+  kill('cat');
+  if (!D.val) return;
+  const V = D.val;
+  const yrs = V.years;
+  // Palette chosen for maximum perceptual distance when stacked:
+  // alternates between warm/cool, light/dark, saturated/muted
+  const CATS = [
+    { lbl:'Casa',            data:V.costoCasa,        col:'#3B82F6' },
+    { lbl:'Mobilità',        data:V.costoMob,         col:'#22C55E' },
+    { lbl:'Sopravvivenza',   data:V.costoSoprav,      col:'#F97316' },
+    { lbl:'Svaghi',          data:V.costoSvaghi,      col:'#EC4899' },
+    { lbl:'Sfizi',           data:V.costoSfizi,       col:'#EAB308' },
+    { lbl:'Vacanze',         data:V.costoVacanze,     col:'#06B6D4' },
+    { lbl:'Abbonamenti',     data:V.costoAbb,         col:'#EF4444' },
+    { lbl:'Movimenti Conto', data:V.movimentiConto,   col:'#A855F7' },
+    { lbl:'Tasse',           data:V.tasse,            col:'#84CC16' },
+    { lbl:'Gestione Conto',  data:V.gestioneConto,    col:'#F59E0B' },
+    { lbl:'Rate Gen.',       data:V.rateGeneriche,    col:'#14B8A6' },
+  ];
+  CH.cat = new Chart(document.getElementById('ch-cat'), {
+    type: 'bar',
+    data: {
+      labels: yrs.map(String),
+      datasets: CATS.map(c => ({
+        label: c.lbl,
+        data: c.data,
+        backgroundColor: c.col + 'dd',
+        borderColor: '#0d1117',   // dark bg color as separator line
+        borderWidth: 1.5,
+        borderRadius: 0,
+      }))
+    },
+    options: {
+      ...COPTS,
+      plugins: { ...COPTS.plugins,
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${euro(c.raw)}/mese` } }
+      },
+      scales: {
+        ...COPTS.scales,
+        x: { ...COPTS.scales.x, stacked: true },
+        y: { ...COPTS.scales.y, stacked: true },
+      }
+    }
+  });
+}
+
+function buildChartGuadagno() {
+  kill('guad');
+  if (!D.val) return;
+  const V = D.val;
+  const yrs = V.years;
+  const guTot = V.guadagnoFisso.map((v,i) => v + V.guadagnoVar[i]);
+  CH.guad = new Chart(document.getElementById('ch-guad'), {
+    type: 'bar',
+    data: {
+      labels: yrs.map(String),
+      datasets: [
+        { label: 'Guadagno Totale', data: guTot,
+          backgroundColor: 'rgba(63,185,80,.7)', borderRadius: 5, borderWidth: 0 },
+        { label: 'Totale Spese',    data: V.totale,
+          backgroundColor: 'rgba(247,129,102,.7)', borderRadius: 5, borderWidth: 0 },
+      ]
+    },
+    options: { ...COPTS,
+      plugins: { ...COPTS.plugins,
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${euro(c.raw)}/mese` } }
+      }
+    }
+  });
+}
+
+function buildChartPctRisparmio() {
+  kill('pctr');
+  if (!D.val) return;
+  const V = D.val;
+  const yrs = V.years;
+  const vals = V.pctRisparmio;
+  CH.pctr = new Chart(document.getElementById('ch-pct-risp'), {
+    type: 'line',
+    data: {
+      labels: yrs.map(String),
+      datasets: [{
+        label: '% Risparmio',
+        data: vals.map(v => parseFloat((v*100).toFixed(2))),
+        borderColor: vals.map(v => v>=0 ? '#3fb950' : '#ff7b72'),
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,220);
+          g.addColorStop(0,'rgba(63,185,80,.15)'); g.addColorStop(1,'rgba(63,185,80,.01)');
+          return g;
+        },
+        fill: true, tension: .4, borderWidth: 2.5,
+        pointRadius: 4,
+        pointBackgroundColor: vals.map(v => v>=0 ? '#3fb950' : '#ff7b72'),
+        pointBorderColor: 'transparent',
+        segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#3fb950' : '#ff7b72' },
+      }]
+    },
+    options: {
+      ...COPTS,
+      plugins: { ...COPTS.plugins, legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.raw}%` } }
+      },
+      scales: {
+        ...COPTS.scales,
+        y: { ...COPTS.scales.y, ticks: { ...COPTS.scales.y.ticks, callback: v => v+'%' } }
+      }
+    }
+  });
+}
+
+function buildValTable() {
+  if (!D.val) return;
+  const V = D.val;
+  const yrs = SEL === 'all' ? V.years : V.years.filter(y => y === SEL);
+  if (!yrs.length) return;
+
+  const rows = [
+    ['🚗 Costo Mobilità',        V.costoMob,        ''],
+    ['🏠 Costo Casa',            V.costoCasa,       ''],
+    ['🛒 Costo Sopravvivenza',   V.costoSoprav,     ''],
+    ['📱 Costo Abbonamenti',     V.costoAbb,        ''],
+    ['🎭 Svaghi (Cinema/Bar/Ristorante)', V.costoSvaghi, ''],
+    ['🌴 Costo Vacanze',         V.costoVacanze,    ''],
+    ['✨ Costo Sfizi',           V.costoSfizi,      ''],
+    ['💸 Movimenti Conto',       V.movimentiConto,  ''],
+    ['🏛️ Tasse',                 V.tasse,           ''],
+    ['🏦 Gestione Conto',        V.gestioneConto,   ''],
+    ['📋 Rate Generiche',        V.rateGeneriche,   ''],
+    ['TOTALE CATALOGATO',        V.totale,          'rT rE'],
+    ['Altre Spese Non Catalogate', V.altreSpeseNC,  'rH', 'signed'],
+    ['─', null, ''],
+    ['Guadagno Fisso Medio',     V.guadagnoFisso,   'rH rI'],
+    ['Guadagno Variabile Medio', V.guadagnoVar,     'rH'],
+    ['─', null, ''],
+    ['Risparmio/Perdita Operativa',   V.risparmioOp,  'rT', 'signed'],
+    ['Risparmio/Perdita Complessiva', V.risparmioCom, 'rT', 'signed'],
+    ['% Risparmio / Guadagno',        V.pctRisparmio, 'rF', 'pct'],
+  ];
+
+  const viByYear = yr => V.years.indexOf(yr);
+
+  let h = `<thead><tr><th>Categoria</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(([lbl, arr, cls, fmt]) => {
+    if (arr === null) { h += `<tr><td colspan="${yrs.length+1}" style="padding:4px 16px;border:none"><hr style="border-color:var(--border)"></td></tr>`; return; }
+    h += `<tr class="${cls}"><td>${lbl}</td>`;
+    yrs.forEach(yr => {
+      const i = viByYear(yr);
+      const v = i >= 0 ? arr[i] : 0;
+      let d = '', vc = '';
+      if (fmt === 'pct')    { d = pct(v); vc = sgn(v); }
+      else if (fmt === 'signed') { d = (v>=0?'+':'')+euro(v); vc = sgn(v); }
+      else d = euro(v);
+      h += `<td class="${vc}">${d}</td>`;
+    });
+    h += '</tr>';
+  });
+  document.getElementById('t-val').innerHTML = h + '</tbody>';
+}
+
+function buildChartPie() {
+  kill('p');
+  const yr = SEL === 'all' ? D.years[D.years.length-1] : SEL;
+  document.getElementById('pie-yr').textContent = yr;
+  const i = yi(yr); if(i<0) return;
+  const items = [
+    ['Spese Casa', D.speseFisseCasa[i]], ['Spese Fisse Auto', D.rateAuto[i]],
+    ['Gas', D.spesaGas[i]],              ['Luce', D.spesaLuce[i]],
+    ['Rate Varie', D.rateMensili[i]],    ['Sp. Generiche', D.speseGeneriche[i]],
+    ['Prelievi', D.prelievo[i]],         ['Carta Credito', D.addebitoCarta[i]],
+  ].filter(x => x[1] > 0);
+  CH.p = new Chart(document.getElementById('ch-pie'), {
+    type:'doughnut',
+    data:{ labels:items.map(x=>x[0]), datasets:[{ data:items.map(x=>x[1]),
+      backgroundColor:['#58a6ff','#3fb950','#f78166','#bc8cff','#ff7b72','#e3b341','#06d6a0','#ef476f'],
+      borderWidth:2, borderColor:'#161b22' }]},
+    options:{ responsive:true, maintainAspectRatio:true, plugins:{
+      legend:{position:'right', labels:{color:'#8b949e',font:{family:'DM Sans',size:10},boxWidth:10,padding:8}},
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${euro(c.raw)}`}} }}
+  });
+}
+
+function buildChartProj() {
+  kill('pr');
+  const byYear = {};
+  D.saldoMonthly.forEach(s => { byYear[s.year] = s.saldo; });
+  const sortedYrs = Object.keys(byYear).map(Number).sort();
+  if (sortedYrs.length < 2) return;
+  const nowY = new Date().getFullYear();
+  CH.pr = new Chart(document.getElementById('ch-proj'), {
+    type:'line',
+    data:{ labels:sortedYrs.map(String), datasets:[{
+      label:'Saldo Fine Anno',
+      data:sortedYrs.map(y=>byYear[y]),
+      borderColor:'#58a6ff',
+      backgroundColor: ctx => {
+        const g = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+        g.addColorStop(0,'rgba(88,166,255,.2)'); g.addColorStop(1,'rgba(88,166,255,.02)');
+        return g;
+      },
+      fill:true, tension:.4, borderWidth:2.5, pointRadius:3, pointBorderColor:'transparent',
+      pointBackgroundColor:sortedYrs.map(y=>y<=nowY?'#3fb950':'#58a6ff'),
+    }]},
+    options:{ ...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
+      tooltip:{callbacks:{label:c=>` Saldo: ${euro(c.raw)}`}}} }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  PAGE SWITCHING
+// ══════════════════════════════════════════════════════
+function switchPage(page) {
+  document.getElementById('page-bilancio').classList.toggle('hidden', page !== 'bilancio');
+  document.getElementById('page-energia').classList.toggle('hidden', page !== 'energia');
+  document.getElementById('page-coint').classList.toggle('hidden', page !== 'coint');
+  document.getElementById('tab-bilancio').classList.toggle('active', page === 'bilancio');
+  document.getElementById('tab-energia').classList.toggle('active', page === 'energia');
+  document.getElementById('tab-coint').classList.toggle('active', page === 'coint');
+  if (page === 'coint' && D) renderCoint();
+  if (page === 'energia') renderEnergia();
+}
+
+// ══════════════════════════════════════════════════════
+//  ENERGIA PARSER
+//  Structure (0-indexed rows, 0-indexed cols):
+//  Row 5  : date headers, col 11+ = monthly (Dec2020, Jan2021…)
+//  Row 16 : GAS  — importo bolletta bimestrale (at bill-receipt col)
+//  Row 26 : GAS  — Smc riportati in bolletta (at bill col)
+//  Row 33 : GAS  — costo mensile (val repeated at col & col+1 per bimester)
+//  Row 38 : GAS  — scarto mensile vs ipotetica
+//  Row 39 : GAS  — €/Smc reale (at bill col)
+//  Rows 6-14: GAS annual breakdown (cols 3-8 = 2021-2026)
+//  Row 49 : ENERGIA date headers (same as row 5)
+//  Row 59 : ENERGIA — importo bolletta bimestrale
+//  Row 70 : ENERGIA — kWh totale mensile (every month col)
+//  Row 71 : ENERGIA — kWh riportati in bolletta (at bill col)
+//  Row 74 : ENERGIA — costo mensile (repeated)
+//  Row 78 : ENERGIA — scarto vs ipotetica
+//  Row 80 : ENERGIA — €/kWh reale (at bill col)
+//  Rows 50-58: ENERGIA annual breakdown (cols 3-8)
+//  CONSUMPTION months for a bill at col C = date[C-2] and date[C-1]
+// ══════════════════════════════════════════════════════
+let SEL_ENE = 'all';
+
+function parseEnergia(wb) {
+  const logs = [];
+  const log = (...a) => { const m=a.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' '); console.log(m); logs.push(m); };
+  const showDbg = () => { const el=document.getElementById('dbg-ene'); if(el){el.style.display='block';el.textContent=logs.join('\n');} };
+
+  // 1. Find sheet
+  const shName = wb.SheetNames.find(n => n === 'ANALISI CONSUMI GAS ENERGIA')
+    || wb.SheetNames.find(n => n.toUpperCase().includes('ANALISI CONSUMI'));
+  if (!shName) { log('❌ Sheet not found. Available:', wb.SheetNames.join(' | ')); showDbg(); return null; }
+  log('✅ Sheet:', shName);
+
+  // 2. Read sheet
+  // CRITICAL: Sheet min_row=2 (Excel row 1 is empty).
+  // XLSX.js sheet_to_json with header:1 outputs raw[0] = Excel row 2.
+  // So XLSX.js index = openpyxl index - 1 for ALL rows.
+  const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header:1, defval:null, raw:true });
+  log('Rows:', raw.length);
+  if (raw.length < 15) { log('❌ Too few rows'); showDbg(); return null; }
+
+  // 3. Helpers
+  const N = v => { if(v==null||v==='') return null; if(typeof v==='number') return v; if(v instanceof Date) return null; const p=parseFloat(v); return isNaN(p)?null:p; };
+  const EPOCH = new Date(Date.UTC(1899,11,30)).getTime();
+  const toDate = v => {
+    if(!v) return null;
+    if(v instanceof Date && !isNaN(v)) return v;
+    if(typeof v==='number' && v>35000 && v<90000) return new Date(EPOCH + v*86400000);
+    if(typeof v==='string'){ const d=new Date(v); if(!isNaN(d)) return d; }
+    return null;
+  };
+
+  // 4. Annual years — XLSX.js idx 4 (= openpyxl idx 5 - 1), cols 3-8
+  const yearRow = raw[4] || [];
+  const annCols=[], annYears=[];
+  for(let c=3; c<=9; c++){
+    const v=yearRow[c];
+    if(typeof v==='number' && Number.isInteger(v) && v>=2015 && v<=2050){ annCols.push(c); annYears.push(v); }
+  }
+  log('annYears:', annYears, 'cols:', annCols);
+  if(annYears.length===0){ log('❌ No years. Row4:', JSON.stringify((raw[4]||[]).slice(0,12))); showDbg(); return null; }
+
+  const annArr = ri => { const r=raw[ri]||[]; return annCols.map(c=>N(r[c])??0); };
+
+  // 5. Annual data — all XLSX.js indices = openpyxl indices - 1
+  const gasSpesaMateria = annArr(5);   // openpyxl 6
+  const gasSconto       = annArr(8);   // openpyxl 9
+  const gasTrasporto    = annArr(9);   // openpyxl 10
+  const gasOneri        = annArr(10);  // openpyxl 11
+  const gasAltro        = annArr(11);  // openpyxl 12
+  const gasImposte      = annArr(12);  // openpyxl 13
+  const gasIva          = annArr(13);  // openpyxl 14
+  const gasTotale       = annArr(15);  // openpyxl 16
+  const gasSmc          = annArr(25);  // openpyxl 26
+  const gasMensile      = annArr(32);  // openpyxl 33
+  const gasEuroSmc      = annArr(39);  // openpyxl 40
+
+  const eneSpesaMateria = annArr(49);  // openpyxl 50
+  const eneSconto       = annArr(50);  // openpyxl 51
+  const eneTrasporto    = annArr(51);  // openpyxl 52
+  const eneOneri        = annArr(52);  // openpyxl 53
+  const eneAltro        = annArr(53);  // openpyxl 54
+  const eneImposte      = annArr(54);  // openpyxl 55
+  const eneIva          = annArr(55);  // openpyxl 56
+  const eneCanone       = annArr(57);  // openpyxl 58
+  const eneTotale       = annArr(58);  // openpyxl 59
+  const eneF1           = annArr(65);  // openpyxl 66
+  const eneF23          = annArr(68);  // openpyxl 69
+  const eneTotKw        = annArr(69);  // openpyxl 70
+  const eneMensile      = annArr(73);  // openpyxl 74
+  const eneEuroKwh      = annArr(79);  // openpyxl 80
+
+  log('gasTotale:', gasTotale);
+  log('eneTotale:', eneTotale);
+
+  // 6. Bill columns
+  // Date row = XLSX.js idx 4 (openpyxl idx 5), cols 11+ contain monthly dates.
+  // Bill amounts are ONLY at specific cols where row 15 (openpyxl 16) is non-null.
+  // These cols: N(13), P(15), R(17), T(19), V(21), W(22), X(23), Z(25), AB(27)...
+  const dateRow  = raw[4]  || [];  // openpyxl 5  → XLSX.js 4
+  const gasBollR = raw[15] || [];  // openpyxl 16 → XLSX.js 15
+  const gasSMCr  = raw[25] || [];  // openpyxl 26 → XLSX.js 25
+  const gasRatR  = raw[39] || [];  // openpyxl 40 → XLSX.js 39
+  const gasScarR = raw[37] || [];  // openpyxl 38 → XLSX.js 37
+  const eneBollR = raw[58] || [];  // openpyxl 59 → XLSX.js 58
+  const eneKwhR  = raw[70] || [];  // openpyxl 71 → XLSX.js 70
+  const eneRatR  = raw[79] || [];  // openpyxl 80 → XLSX.js 79
+  const eneScarR = raw[77] || [];  // openpyxl 78 → XLSX.js 77
+
+  // Find bill cols: non-null in gasBollR from col 13 onwards
+  const billCols = [];
+  const maxCol = Math.max(gasBollR.length||0, eneBollR.length||0, 200);
+  for(let c=13; c<maxCol; c++){
+    if(gasBollR[c]!=null || eneBollR[c]!=null) billCols.push(c);
+  }
+  log('Bill cols:', billCols.length, 'first:', billCols.slice(0,5));
+
+  const fmt = dt => dt ? dt.toLocaleDateString('it-IT',{month:'short',year:'numeric'}) : '—';
+  const bills = [];
+
+  for(const c of billCols){
+    const d = toDate(dateRow[c]);
+    if(!d){ log('⚠️ No date at col', c, '=', JSON.stringify(dateRow[c])); continue; }
+    const yr = d.getFullYear();
+    if(yr < 2020 || yr > 2035) continue;
+
+    const dp2 = toDate(dateRow[c-2]);
+    const dp1 = toDate(dateRow[c-1]);
+    const consYear = dp1 ? dp1.getFullYear() : yr;
+
+    bills.push({
+      billLabel: fmt(d), billYear: yr, consYear,
+      period:    fmt(dp2) + ' — ' + fmt(dp1),
+      gasBoll:   N(gasBollR[c]), gasSmc:    N(gasSMCr[c]),
+      gasRatio:  N(gasRatR[c]),  gasScarto: N(gasScarR[c]),
+      eneBoll:   N(eneBollR[c]), eneKwh:    N(eneKwhR[c]),
+      eneRatio:  N(eneRatR[c]),  eneScarto: N(eneScarR[c]),
+    });
+  }
+
+  log('✅ Bills:', bills.length, bills[0] ? JSON.stringify(bills[0]) : 'NONE');
+  showDbg();
+
+  const billYears = [...new Set(bills.map(b=>b.consYear))].sort();
+  return {
+    annYears, gasTotale, gasMensile, gasSmc, gasEuroSmc,
+    gasSpesaMateria, gasSconto, gasTrasporto, gasOneri, gasAltro, gasImposte, gasIva,
+    eneTotale, eneMensile, eneTotKw, eneEuroKwh, eneF1, eneF23,
+    eneSpesaMateria, eneSconto, eneTrasporto, eneOneri, eneAltro, eneImposte, eneIva, eneCanone,
+    bills, billYears,
+  };
+}
+
+
+// ══════════════════════════════════════════════════════
+//  RENDER ENERGIA PAGE
+// ══════════════════════════════════════════════════════
+function renderEnergia() {
+  const E = D ? D.energia : null;
+
+  if (!E) {
+    // Show diagnostic message with details about what went wrong
+    const emptyEl = document.getElementById('empty-ene');
+    emptyEl.classList.remove('hidden');
+    document.getElementById('dash-ene').classList.add('hidden');
+
+    if (D) {
+      // File was loaded but energia parsing failed — show diagnostic
+      const sheetList = D._sheetNames ? D._sheetNames.join(', ') : 'N/D';
+      emptyEl.innerHTML = `
+        <div class="empty-ic">⚠️</div>
+        <h2>Foglio non trovato</h2>
+        <p>Il foglio <strong>"ANALISI CONSUMI GAS ENERGIA"</strong> non è stato trovato nel file.<br><br>
+        Fogli presenti nel file:<br><span style="font-size:11px;color:var(--muted)">${sheetList}</span></p>`;
+    }
+    return;
+  }
+
+  document.getElementById('empty-ene').classList.add('hidden');
+  document.getElementById('dash-ene').classList.remove('hidden');
+  const dbgEne = document.getElementById('dbg-ene');
+  if (dbgEne) dbgEne.style.display = 'none';
+
+  buildPillsEne(E);
+  buildKPIEne(E);
+  buildChartEneTrend(E);
+  buildChartEneAnn(E);
+  buildChartGasComp(E);
+  buildChartGasSmc(E);
+  buildChartEneKw(E);
+  buildChartGasPrice(E);
+  buildChartEnePrice(E);
+  buildTableBills(E);
+  buildTableGas(E);
+  buildTableEne(E);
+}
+
+function buildPillsEne(E) {
+  const c = document.getElementById('pills-ene');
+  c.innerHTML = '<span class="tb-label">Anno</span>';
+  const add = (lbl, val) => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (val === SEL_ENE ? ' on' : '');
+    b.textContent = lbl;
+    b.onclick = () => { SEL_ENE = val; renderEnergia(); };
+    c.appendChild(b);
+  };
+  add('Tutti', 'all');
+  E.billYears.forEach(y => add(y, y));
+}
+
+function filteredBills(E) {
+  return SEL_ENE === 'all' ? E.bills : E.bills.filter(b => b.consYear === SEL_ENE);
+}
+
+function buildKPIEne(E) {
+  const li = E.annYears.length - 1;
+  const pi = li - 1;
+  const yr = SEL_ENE === 'all' ? E.annYears[li] : SEL_ENE;
+  const ai = E.annYears.indexOf(yr);
+  const ap = ai - 1;
+
+  const gTot = ai >= 0 ? E.gasTotale[ai] : 0;
+  const eTot = ai >= 0 ? E.eneTotale[ai] : 0;
+  const gPrev = ap >= 0 ? E.gasTotale[ap] : null;
+  const ePrev = ap >= 0 ? E.eneTotale[ap] : null;
+  const smc   = ai >= 0 ? E.gasSmc[ai] : 0;
+  const kwh   = ai >= 0 ? E.eneTotKw[ai] : 0;
+  const gM    = ai >= 0 ? E.gasMensile[ai] : 0;
+  const eM    = ai >= 0 ? E.eneMensile[ai] : 0;
+
+  function td(curr, prev) {
+    if (!prev) return '';
+    const d = ((curr-prev)/Math.abs(prev)*100);
+    return `<div class="kpi-trend ${d<=0?'up':'dn'}">${d<=0?'▼':'▲'} ${Math.abs(d).toFixed(1)}% vs anno prec.</div>`;
+  }
+
+  document.getElementById('kpis-ene').innerHTML = [
+    {lbl:`🔥 Totale Gas ${yr}`,    val:euro(gTot), cls:'blu', sub:`Media mensile ${euro(gM)}`,  tr:td(gTot,gPrev), c:'c0'},
+    {lbl:`⚡ Totale Energia ${yr}`, val:euro(eTot), cls:'ora', sub:`Media mensile ${euro(eM)}`,  tr:td(eTot,ePrev), c:'c2'},
+    {lbl:`💡 Totale Combinato ${yr}`,val:euro(gTot+eTot),cls:'neu',sub:`Mensile medio ${euro((gTot+eTot)/12)}`,tr:'',c:'c3'},
+    {lbl:`📏 Consumo Gas ${yr}`,    val:`${smc} Smc`, cls:'blu',sub:`≈ ${Math.round(smc/12)} Smc/mese`,tr:'',c:'c1'},
+    {lbl:`🔌 Consumo Elettrico ${yr}`,val:`${kwh} kWh`,cls:'ora',sub:`≈ ${Math.round(kwh/12)} kWh/mese`,tr:'',c:'c4'},
+  ].map(k=>`<div class="kpi ${k.c}">
+    <div class="kpi-lbl">${k.lbl}</div>
+    <div class="kpi-val ${k.cls}">${k.val}</div>
+    <div class="kpi-sub">${k.sub}</div>${k.tr}
+  </div>`).join('');
+}
+
+function buildChartEneTrend(E) {
+  kill('enet');
+  const bills = filteredBills(E);
+  CH.enet = new Chart(document.getElementById('ch-ene-trend'), {
+    type:'line',
+    data:{ labels: bills.map(b => isMobile ? b.billLabel : b.period),
+      datasets:[
+        {label:'Gas (€)', data:bills.map(b=>b.gasBoll), borderColor:'#3B82F6', backgroundColor:'rgba(59,130,246,.07)', tension:.3, borderWidth:2.5, pointRadius:3, spanGaps:true},
+        {label:'Energia (€)', data:bills.map(b=>b.eneBoll), borderColor:'#EAB308', backgroundColor:'rgba(234,179,8,.07)', tension:.3, borderWidth:2.5, pointRadius:3, spanGaps:true},
+      ]},
+    options:{ ...COPTS, interaction:{mode:'index',intersect:false},
+      plugins:{...COPTS.plugins,
+        tooltip:{callbacks:{
+          title: t => `Bolletta: ${bills[t[0].dataIndex]?.billLabel} (consumi: ${bills[t[0].dataIndex]?.period})`,
+          label: c=>` ${c.dataset.label}: ${euro(c.raw)}`
+        }}
+      },
+      scales:{...COPTS.scales,
+        x:{...COPTS.scales.x, ticks:{...COPTS.scales.x.ticks, maxTicksLimit:12, maxRotation:35}}
+      }
+    }
+  });
+}
+
+function buildChartEneAnn(E) {
+  kill('enea');
+  const yrs = SEL_ENE === 'all' ? E.annYears : [SEL_ENE];
+  const gi = yrs.map(y => E.annYears.indexOf(y));
+  CH.enea = new Chart(document.getElementById('ch-ene-ann'), {
+    type:'bar',
+    data:{ labels:yrs.map(String), datasets:[
+      {label:'Gas', data:gi.map(i=>i>=0?E.gasTotale[i]:0), backgroundColor:'rgba(59,130,246,.8)', borderRadius:4, borderWidth:0},
+      {label:'Energia', data:gi.map(i=>i>=0?E.eneTotale[i]:0), backgroundColor:'rgba(234,179,8,.8)', borderRadius:4, borderWidth:0},
+    ]},
+    options:{...COPTS, plugins:{...COPTS.plugins, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${euro(c.raw)}`}}}}
+  });
+}
+
+function buildChartGasComp(E) {
+  kill('gasc');
+  const yr = SEL_ENE === 'all' ? E.annYears[E.annYears.length-1] : SEL_ENE;
+  document.getElementById('gas-comp-yr').textContent = yr;
+  const i = E.annYears.indexOf(yr); if(i<0) return;
+  const items = [
+    ['Spesa Materia', E.gasSpesaMateria[i]],
+    ['Trasporto',     E.gasTrasporto[i]],
+    ['Imposte',       E.gasImposte[i]],
+    ['IVA',           E.gasIva[i]],
+    ['Oneri',         Math.max(0, E.gasOneri[i])],
+    ['Altro/Voltura', Math.max(0, E.gasAltro[i])],
+    ['Sconto (↓)',    Math.abs(E.gasSconto[i])],
+  ].filter(x=>x[1]>0);
+  CH.gasc = new Chart(document.getElementById('ch-gas-comp'), {
+    type:'doughnut',
+    data:{ labels:items.map(x=>x[0]), datasets:[{data:items.map(x=>x[1]),
+      backgroundColor:['#3B82F6','#06B6D4','#F97316','#EAB308','#A855F7','#84CC16','#6B7280'],
+      borderWidth:2, borderColor:'#161b22'}]},
+    options:{responsive:true, maintainAspectRatio:true, plugins:{
+      legend:{position:'right', labels:{color:'#8b949e',font:{family:'DM Sans',size:10},boxWidth:10,padding:8}},
+      tooltip:{callbacks:{label:c=>` ${c.label}: ${euro(c.raw)}`}}}}
+  });
+}
+
+function buildChartGasSmc(E) {
+  kill('gsmc');
+  const bills = filteredBills(E).filter(b=>b.gasSmc!==null);
+  CH.gsmc = new Chart(document.getElementById('ch-gas-smc'), {
+    type:'bar',
+    data:{ labels:bills.map(b=>b.period),
+      datasets:[{label:'Smc', data:bills.map(b=>b.gasSmc),
+        backgroundColor:'rgba(59,130,246,.75)', borderRadius:3, borderWidth:0}]},
+    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
+      tooltip:{callbacks:{title:t=>`Bolletta ${bills[t[0].dataIndex]?.billLabel}`,label:c=>` Consumi: ${c.raw} Smc`}}},
+      scales:{...COPTS.scales,
+        x:{...COPTS.scales.x, ticks:{...COPTS.scales.x.ticks, maxTicksLimit:12, maxRotation:35}},
+        y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+' Smc'}}}}
+  });
+}
+
+function buildChartEneKw(E) {
+  kill('enkw');
+  const bills = filteredBills(E).filter(b=>b.eneKwh!==null);
+  CH.enkw = new Chart(document.getElementById('ch-ene-kw'), {
+    type:'bar',
+    data:{ labels:bills.map(b=>b.period),
+      datasets:[{label:'kWh', data:bills.map(b=>b.eneKwh),
+        backgroundColor:'rgba(234,179,8,.75)', borderRadius:3, borderWidth:0}]},
+    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
+      tooltip:{callbacks:{title:t=>`Bolletta ${bills[t[0].dataIndex]?.billLabel}`,label:c=>` Consumi: ${c.raw} kWh`}}},
+      scales:{...COPTS.scales,
+        x:{...COPTS.scales.x, ticks:{...COPTS.scales.x.ticks, maxTicksLimit:12, maxRotation:35}},
+        y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+' kWh'}}}}
+  });
+}
+
+function buildChartGasPrice(E) {
+  kill('gpr');
+  const yrs = SEL_ENE === 'all' ? E.annYears : [SEL_ENE];
+  const gi  = yrs.map(y => E.annYears.indexOf(y));
+  CH.gpr = new Chart(document.getElementById('ch-gas-price'), {
+    type:'line',
+    data:{ labels:yrs.map(String), datasets:[{label:'€/Smc',
+      data:gi.map(i=>i>=0?parseFloat(E.gasEuroSmc[i].toFixed(4)):null),
+      borderColor:'#3B82F6', backgroundColor:'rgba(59,130,246,.1)',
+      fill:true, tension:.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#3B82F6'}]},
+    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
+      tooltip:{callbacks:{label:c=>` ${c.raw} €/Smc`}}},
+      scales:{...COPTS.scales, y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+'€'}}}}
+  });
+}
+
+function buildChartEnePrice(E) {
+  kill('epr');
+  const yrs = SEL_ENE === 'all' ? E.annYears : [SEL_ENE];
+  const gi  = yrs.map(y => E.annYears.indexOf(y));
+  CH.epr = new Chart(document.getElementById('ch-ene-price'), {
+    type:'line',
+    data:{ labels:yrs.map(String), datasets:[{label:'€/kWh',
+      data:gi.map(i=>i>=0?parseFloat(E.eneEuroKwh[i].toFixed(4)):null),
+      borderColor:'#EAB308', backgroundColor:'rgba(234,179,8,.1)',
+      fill:true, tension:.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#EAB308'}]},
+    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
+      tooltip:{callbacks:{label:c=>` ${c.raw} €/kWh`}}},
+      scales:{...COPTS.scales, y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+'€'}}}}
+  });
+}
+
+function buildTableBills(E) {
+  const bills = filteredBills(E);
+  let h = `<thead><tr>
+    <th style="text-align:left">Bolletta</th>
+    <th style="text-align:left">Periodo Consumi</th>
+    <th>€ Gas</th><th>Smc</th><th>€/Smc</th><th>Scarto Gas</th>
+    <th>€ Energia</th><th>kWh</th><th>€/kWh</th><th>Scarto Luce</th>
+    <th>Totale</th>
+  </tr></thead><tbody>`;
+  bills.forEach(b => {
+    const tot = (b.gasBoll||0) + (b.eneBoll||0);
+    const gsc = b.gasScarto, esc = b.eneScarto;
+    h += `<tr>
+      <td style="text-align:left;color:var(--muted)">${b.billLabel}</td>
+      <td style="text-align:left">${b.period}</td>
+      <td style="color:var(--blue)">${b.gasBoll!==null?euro(b.gasBoll):'—'}</td>
+      <td>${b.gasSmc!==null?Math.round(b.gasSmc):'—'}</td>
+      <td>${b.gasRatio!==null?b.gasRatio.toFixed(4):'—'}</td>
+      <td class="${gsc!==null?sgn(gsc):''}">${gsc!==null?(gsc>=0?'+':'')+euro(gsc):'—'}</td>
+      <td style="color:var(--yellow)">${b.eneBoll!==null?euro(b.eneBoll):'—'}</td>
+      <td>${b.eneKwh!==null?Math.round(b.eneKwh):'—'}</td>
+      <td>${b.eneRatio!==null?b.eneRatio.toFixed(4):'—'}</td>
+      <td class="${esc!==null?sgn(esc):''}">${esc!==null?(esc>=0?'+':'')+euro(esc):'—'}</td>
+      <td style="font-weight:600;color:var(--text)">${euro(tot)}</td>
+    </tr>`;
+  });
+  // Totals row
+  const gSum = bills.reduce((s,b)=>s+(b.gasBoll||0),0);
+  const eSum = bills.reduce((s,b)=>s+(b.eneBoll||0),0);
+  h += `<tr class="rF">
+    <td colspan="2" style="text-align:left">TOTALE PERIODO</td>
+    <td>${euro(gSum)}</td><td></td><td></td><td></td>
+    <td>${euro(eSum)}</td><td></td><td></td><td></td>
+    <td>${euro(gSum+eSum)}</td>
+  </tr>`;
+  document.getElementById('t-bills').innerHTML = h + '</tbody>';
+}
+
+function buildTableGas(E) {
+  const yrs = SEL_ENE === 'all' ? E.annYears : E.annYears.filter(y=>y===SEL_ENE);
+  const gi  = yrs.map(y=>E.annYears.indexOf(y));
+  const rows = [
+    ['Spese Materia',     E.gasSpesaMateria, ''],
+    ['— Sconto',          E.gasSconto,       '', 'signed'],
+    ['Trasporto',         E.gasTrasporto,    ''],
+    ['Oneri',             E.gasOneri,        ''],
+    ['Altro / Voltura',   E.gasAltro,        ''],
+    ['Imposte',           E.gasImposte,      ''],
+    ['IVA',               E.gasIva,          ''],
+    ['TOTALE GAS',        E.gasTotale,       'rF'],
+    ['─', null, ''],
+    ['Costo Mensile Medio', E.gasMensile,    'rT'],
+    ['Consumo Smc/anno',  E.gasSmc,          '', 'raw'],
+    ['Prezzo €/Smc',      E.gasEuroSmc,      '', 'dec4'],
+  ];
+  let h=`<thead><tr><th>Voce Gas</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(([l,a,c,f])=>{
+    if(!a){h+=`<tr><td colspan="${yrs.length+1}" style="padding:3px 16px;border:none"><hr style="border-color:var(--border)"></td></tr>`;return;}
+    h+=`<tr class="${c}"><td>${l}</td>`;
+    gi.forEach(i=>{const v=i>=0?a[i]:0;let d='',vc='';
+      if(f==='signed'){d=(v>=0?'+':'')+euro(v);vc=sgn(v);}
+      else if(f==='raw'){d=v?Math.round(v):'—';}
+      else if(f==='dec4'){d=v!=null?(v.toFixed(4)+' €'):'—';}
+      else d=euro(v);
+      h+=`<td class="${vc}">${d}</td>`;});
+    h+='</tr>';
+  });
+  document.getElementById('t-gas').innerHTML=h+'</tbody>';
+}
+
+function buildTableEne(E) {
+  const yrs = SEL_ENE === 'all' ? E.annYears : E.annYears.filter(y=>y===SEL_ENE);
+  const gi  = yrs.map(y=>E.annYears.indexOf(y));
+  const rows = [
+    ['Spese Materia',     E.eneSpesaMateria, ''],
+    ['— Sconto',          E.eneSconto,       '', 'signed'],
+    ['Trasporto/Vendita', E.eneTrasporto,    ''],
+    ['Oneri',             E.eneOneri,        ''],
+    ['Altro / Voltura',   E.eneAltro,        ''],
+    ['Imposte',           E.eneImposte,      ''],
+    ['IVA',               E.eneIva,          ''],
+    ['Canone',            E.eneCanone,       ''],
+    ['TOTALE ENERGIA',    E.eneTotale,       'rF'],
+    ['─', null, ''],
+    ['Costo Mensile Medio', E.eneMensile,    'rT'],
+    ['Consumo kWh/anno',  E.eneTotKw,        '', 'raw'],
+    ['— di cui F1',       E.eneF1,           '', 'raw'],
+    ['— di cui F2/3',     E.eneF23,          '', 'raw'],
+    ['Prezzo €/kWh',      E.eneEuroKwh,      '', 'dec4'],
+  ];
+  let h=`<thead><tr><th>Voce Energia</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
+  rows.forEach(([l,a,c,f])=>{
+    if(!a){h+=`<tr><td colspan="${yrs.length+1}" style="padding:3px 16px;border:none"><hr style="border-color:var(--border)"></td></tr>`;return;}
+    h+=`<tr class="${c}"><td>${l}</td>`;
+    gi.forEach(i=>{const v=i>=0?a[i]:0;let d='',vc='';
+      if(f==='signed'){d=(v>=0?'+':'')+euro(v);vc=sgn(v);}
+      else if(f==='raw'){d=v?Math.round(v):'—';}
+      else if(f==='dec4'){d=v!=null?(v.toFixed(4)+' €'):'—';}
+      else d=euro(v);
+      h+=`<td class="${vc}">${d}</td>`;});
+    h+='</tr>';
+  });
+  document.getElementById('t-ene').innerHTML=h+'</tbody>';
+}
+
+// ══════════════════════════════════════════════════════
+//  PARSE COINTESTATO
+// ══════════════════════════════════════════════════════
+function parseCoint(wb) {
+  const shName = wb.SheetNames.find(n => n === 'SPESE COINTESTATO');
+  if (!shName) return null;
+
+  const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header:1, defval:null, raw:true });
+  if (raw.length < 2) return null;
+
+  // Columns: 0=TIPOLOGIA, 1=ASSEGNATO, 2=MESE_STR, 3=ANNO, 4=MESE_NUM, 7=IMPORTO, 8=CATEGORIA
+  const CATS = {
+    'RATA MUTUO CASA':      '🏠 Mutuo',
+    'RATA ASSICURAZIONE':   '🛡️ Assic. Mutuo',
+    'SPESE ASSICURAZIONE':  '🛡️ Assic. Casa',
+    'COMMISSIONI/TASSE':    '🏦 Commissioni',
+    'SPESE CONDOMINIALI':   '🏢 Condominio',
+    'BOLLETTE GAS':         '🔥 Gas',
+    'BOLLETTE LUCE':        '💡 Luce',
+    'BONIFICO':             '💸 Bonifici',
+    'BONIFICO INIZIALE':    '💸 Bonifici',
+    'CUCINA':               '🪑 Arredamento',
+    'DIVANO':               '🪑 Arredamento',
+    'IKEA':                 '🪑 Arredamento',
+    'ASSICURAZIONE FINANZIAMENTO': '🛡️ Assic. Casa',
+    'SPESE ACQUISTO CASA':  '🏠 Acquisto Casa',
+    'SPESE ACQUISTO CASA FINANZIAMENTO': '🏠 Acquisto Casa',
+  };
+
+  const years = new Set();
+  const byYearCat = {};   // {year: {catLabel: total}}
+  const byMonth = {};     // {"year-month": {catLabel: total, _spese: x, _versamenti: x}}
+
+  for (let i = 1; i < raw.length; i++) {
+    const row = raw[i];
+    if (!row[3] || !row[7]) continue;
+    const anno = typeof row[3] === 'number' ? Math.round(row[3]) : parseInt(row[3]);
+    const mese = typeof row[4] === 'number' ? Math.round(row[4]) : 0;
+    const imp  = typeof row[7] === 'number' ? row[7] : 0;
+    const rawCat = row[8] || 'ALTRO';
+    const cat  = CATS[rawCat] || rawCat;
+
+    if (anno < 2019 || anno > 2030) continue;
+    years.add(anno);
+
+    // Annual
+    if (!byYearCat[anno]) byYearCat[anno] = {};
+    byYearCat[anno][cat] = (byYearCat[anno][cat] || 0) + imp;
+
+    // Monthly
+    if (mese > 0) {
+      const key = `${anno}-${mese}`;
+      if (!byMonth[key]) byMonth[key] = { _spese: 0, _versamenti: 0 };
+      byMonth[key][cat] = (byMonth[key][cat] || 0) + imp;
+      if (imp > 0) byMonth[key]._spese += imp;
+      else byMonth[key]._versamenti += imp;
+    }
+  }
+
+  const sortedYears = [...years].sort();
+  const allCats = [...new Set(
+    Object.values(byYearCat).flatMap(d => Object.keys(d))
+  )].filter(c => !c.startsWith('_') && c !== '💸 Bonifici' && c !== '🏠 Acquisto Casa').sort();
+
+  // Build annual summary arrays
+  const annSpese = sortedYears.map(y =>
+    Object.entries(byYearCat[y] || {}).filter(([k,v]) => v > 0 && k !== '🏠 Acquisto Casa').reduce((s,[,v])=>s+v, 0)
+  );
+  const annVersamenti = sortedYears.map(y =>
+    Math.abs(Object.entries(byYearCat[y] || {}).filter(([,v]) => v < 0).reduce((s,[,v])=>s+v, 0))
+  );
+  const annMargine = sortedYears.map((y,i) => annVersamenti[i] - annSpese[i]);
+
+  // Build monthly records sorted desc
+  const monthly = Object.entries(byMonth)
+    .map(([key, data]) => {
+      const [y, m] = key.split('-').map(Number);
+      return { year: y, month: m, key, ...data };
+    })
+    .filter(r => r.year >= 2020)
+    .sort((a,b) => b.year - a.year || b.month - a.month);
+
+  // Annual cat breakdown
+  const catTotals = {};
+  allCats.forEach(cat => {
+    catTotals[cat] = sortedYears.map(y => byYearCat[y]?.[cat] || 0);
+  });
+
+  // ── Amortization schedule from Gestione finanziamenti ──
+  // Excel H28:H267 = mutuo residuo, I28:I267 = assic residuo
+  // min_row=2 → XLSX.js idx = Excel_row - 2
+  // Excel row 28 = XLSX.js idx 26
+  const amortSheet = wb.SheetNames.find(n => n === 'Gestione finanziamenti');
+  const amortData = [];
+  if (amortSheet) {
+    const ws2 = wb.Sheets[amortSheet];
+    // Read directly from cell references to avoid any indexing issues
+    for (let excelRow = 28; excelRow <= 267; excelRow++) {
+      const hCell = ws2[`H${excelRow}`];
+      const iCell = ws2[`I${excelRow}`];
+      const mutuo = hCell ? (typeof hCell.v === 'number' ? hCell.v : parseFloat(hCell.v)) : null;
+      const assic = iCell ? (typeof iCell.v === 'number' ? iCell.v : parseFloat(iCell.v)) : null;
+      if ((mutuo === null || isNaN(mutuo)) && (assic === null || isNaN(assic))) continue;
+      // Generate date from sequence: row 28 = Nov 2020, row 29 = Dec 2020, etc.
+      const monthOffset = excelRow - 28; // 0 = Nov 2020
+      const baseYear = 2020, baseMonth = 10; // Nov = month index 10 (0-based)
+      const totalMonths = baseMonth + monthOffset;
+      const year = baseYear + Math.floor(totalMonths / 12);
+      const month = totalMonths % 12;
+      amortData.push({
+        date:  new Date(year, month, 1),
+        mutuo: (!isNaN(mutuo) && mutuo > 0.01) ? mutuo : null,
+        assic: (!isNaN(assic) && assic > 0.01) ? assic : null,
+      });
+    }
+    console.log('amortData:', amortData.length, 'first:', amortData[0]?.mutuo, amortData[0]?.assic);
+  }
+
+  // ── Cumulative balance ──
+  // ── Saldo mensile da "Analisi Spese Cointestato" ──
+  // Row 7 (idx 6) = date headers as text "N MESE YYYY"
+  // Row 27 (idx 26) = "Totale complessivo" = saldo netto del mese
+  const MESI_IT = {GENNAIO:1,FEBBRAIO:2,MARZO:3,APRILE:4,MAGGIO:5,GIUGNO:6,
+                   LUGLIO:7,AGOSTO:8,SETTEMBRE:9,OTTOBRE:10,NOVEMBRE:11,DICEMBRE:12};
+  const analisiSheet = wb.SheetNames.find(n => n === 'Analisi Spese Cointestato');
+  const saldoMensile = {}; // key="anno-mese", val=netto
+  if (analisiSheet) {
+    const ar = XLSX.utils.sheet_to_json(wb.Sheets[analisiSheet], {header:1, defval:null, raw:true});
+    const dateRow  = ar[6] || [];   // row 7
+    const totRow   = ar[26] || [];  // row 27
+    for (let c = 1; c < dateRow.length; c++) {
+      const label = dateRow[c];
+      const val   = totRow[c];
+      if (!label || typeof label !== 'string') continue;
+      if (val === null || val === undefined) continue;
+      const parts = label.trim().split(/\s+/);
+      if (parts.length !== 3) continue;
+      const meseNum = MESI_IT[parts[1].toUpperCase()];
+      const anno    = parseInt(parts[2]);
+      if (!meseNum || isNaN(anno) || anno < 2019 || anno > 2030) continue;
+      saldoMensile[`${anno}-${meseNum}`] = typeof val === 'number' ? val : 0;
+    }
+  }
+
+  // Build cumulativeData sorted Jan→Dec per year
+  const cumulativeData = [];
+  let cum = 0;
+  const allMonthKeys = Object.keys(saldoMensile).sort((a,b) => {
+    const [ya,ma] = a.split('-').map(Number);
+    const [yb,mb] = b.split('-').map(Number);
+    return ya !== yb ? ya - yb : ma - mb;
+  });
+  for (const key of allMonthKeys) {
+    const [y, m] = key.split('-').map(Number);
+    const net = saldoMensile[key];
+    cum += net;
+    const entry = { year: y, month: m, net, cumulative: cum,
+      label: new Date(y, m-1, 1).toLocaleDateString('it-IT',{month:'short',year:'numeric'}) };
+    // Also add per-category from byMonth
+    const mData = byMonth[key] || {};
+    Object.entries(mData).forEach(([k,v]) => { if (!k.startsWith('_')) entry[k] = v; });
+    cumulativeData.push(entry);
+  }
+
+  return { sortedYears, allCats, annSpese, annVersamenti, annMargine, catTotals, byYearCat, monthly, amortData, cumulativeData };
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER COINTESTATO
+// ══════════════════════════════════════════════════════
+let COINT_MODE = 'annual', COINT_YEAR = null, COINT_MONTH = null;
+let CH_COINT = {};
+
+function renderCoint() {
+  if (!D || !D.coint) {
+    document.getElementById('empty-coint').classList.remove('hidden');
+    document.getElementById('dash-coint').classList.add('hidden');
+    return;
+  }
+  document.getElementById('empty-coint').classList.add('hidden');
+  document.getElementById('dash-coint').classList.remove('hidden');
+
+  const C = D.coint;
+  if (!COINT_YEAR) COINT_YEAR = C.sortedYears[C.sortedYears.length - 1];
+
+  buildPillsCoint();
+  if (COINT_MODE === 'annual') {
+    buildKPICoint();
+    buildChartsCoint();
+    buildTableCoint();
+  } else {
+    buildPillsCointMonth();
+    buildKPICointMonth();
+  }
+}
+
+function buildPillsCoint() {
+  const c = document.getElementById('pills-coint');
+  c.innerHTML = '<span class="tb-label">Anno</span>';
+  D.coint.sortedYears.forEach(y => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (y === COINT_YEAR ? ' on' : '');
+    b.textContent = y;
+    b.onclick = () => { COINT_YEAR = y; renderCoint(); };
+    c.appendChild(b);
+  });
+}
+
+function setCointMode(mode) {
+  COINT_MODE = mode;
+  document.getElementById('btn-coint-annual').classList.toggle('on', mode === 'annual');
+  document.getElementById('btn-coint-monthly').classList.toggle('on', mode === 'monthly');
+  document.getElementById('kpis-coint').classList.toggle('hidden', mode !== 'annual');
+  document.getElementById('kpis-coint-month').classList.toggle('hidden', mode !== 'monthly');
+  document.getElementById('charts-coint').classList.toggle('hidden', mode !== 'annual');
+  document.getElementById('pills-coint-month').classList.toggle('hidden', mode !== 'monthly');
+  document.getElementById('sec-coint-table').classList.add('hidden'); // replaced by saldo cumulativo table
+  if (mode === 'monthly' && !COINT_MONTH) {
+    const last = D.coint.monthly[0];
+    if (last) COINT_MONTH = `${last.year}-${last.month}`;
+  }
+  renderCoint();
+}
+
+function buildKPICoint() {
+  const C = D.coint;
+  const yi = C.sortedYears.indexOf(COINT_YEAR);
+  const spese = C.annSpese[yi] || 0;
+  const vers  = C.annVersamenti[yi] || 0;
+  const marg  = C.annMargine[yi] || 0;
+  const mutuo = C.catTotals['🏠 Mutuo']?.[yi] || 0;
+  const prevYi = yi > 0 ? yi - 1 : -1;
+  const prevSpese = prevYi >= 0 ? C.annSpese[prevYi] : null;
+
+  // Saldo accumulato totale = last cumulative value up to end of selected year
+  const yearCumData = C.cumulativeData.filter(d => d.year <= COINT_YEAR);
+  const saldoCum = yearCumData.length ? yearCumData[yearCumData.length-1].cumulative : 0;
+
+  // Logic: versamenti (negative in data) are actual income, spese are outflows
+  // So: saldo>0 means more spent than received (deficit), saldo<0 means surplus
+  // We invert the display logic: show as positive when it's a surplus
+  const saldoDisplay = euro(Math.abs(saldoCum));
+  const saldoIsSurplus = saldoCum <= 0; // negative cumulative = more received than spent = surplus
+
+  const cards = [
+    { lbl:`💸 Totale Spese ${COINT_YEAR}`, val:euro(spese), cls:'ora', c:'c2',
+      sub: prevSpese ? `Anno prec.: ${euro(prevSpese)}` : '',
+      tr: prevSpese ? `<div class="kpi-trend ${spese<=prevSpese?'up':'dn'}">${spese<=prevSpese?'▼':'▲'} ${euro(Math.abs(spese-prevSpese))} vs ${COINT_YEAR-1}</div>` : '' },
+    { lbl:`💰 Versamenti ${COINT_YEAR}`, val:euro(vers), cls:'blu', c:'c1', sub:'Bonifici versati sul conto', tr:'' },
+    { lbl:`📈 Margine ${COINT_YEAR}`, val:euro(Math.abs(marg)), cls:marg<=0?'pos':'neg', c:'c0',
+      sub: marg<=0 ? '✅ Surplus (versato > speso)' : '⚠️ Deficit (speso > versato)', tr:'' },
+    { lbl:`📊 Saldo Accumulato al ${COINT_YEAR}`, val:saldoDisplay,
+      cls: saldoIsSurplus ? 'pos' : 'neg', c:'c3',
+      sub: saldoIsSurplus ? '✅ Saldo positivo (surplus)' : '⚠️ Saldo negativo (deficit)', tr:'' },
+  ];
+
+  document.getElementById('kpis-coint').innerHTML = cards.map(k => `
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      ${k.tr}
+    </div>`).join('');
+}
+
+function buildChartsCoint() {
+  const C = D.coint;
+  const isMobile = window.innerWidth <= 480;
+
+  // Destroy old charts
+  Object.values(CH_COINT).forEach(ch => ch.destroy());
+  CH_COINT = {};
+
+  // Annual bar chart
+  const catColors = {
+    '🏠 Mutuo': '#3B82F6', '🛡️ Assic. Mutuo': '#8b5cf6', '🛡️ Assic. Casa': '#a78bfa',
+    '🏦 Commissioni': '#6b7280', '🏢 Condominio': '#f59e0b', '🔥 Gas': '#ef4444',
+    '💡 Luce': '#eab308', '🪑 Arredamento': '#10b981',
+  };
+
+  const yi = C.sortedYears.indexOf(COINT_YEAR);
+  const datasets = C.allCats.map(cat => ({
+    label: cat,
+    data: C.catTotals[cat] || [],
+    backgroundColor: catColors[cat] || '#58a6ff',
+    borderRadius: 4,
+  }));
+
+  CH_COINT.annual = new Chart(document.getElementById('ch-coint-annual'), {
+    type: 'bar',
+    data: { labels: C.sortedYears, datasets },
+    options: { ...COPTS, plugins: { ...COPTS.plugins, legend:{ labels:{ color:'#8b949e', font:{size: isMobile?9:11}, boxWidth:10 }}},
+      scales: { ...COPTS.scales, x:{ ...COPTS.scales.x, stacked:true }, y:{ ...COPTS.scales.y, stacked:true }}}
+  });
+
+  // Pie chart for selected year
+  const yearData = C.byYearCat[COINT_YEAR] || {};
+  const pieLabels = [], pieData = [], pieColors = [];
+  Object.entries(yearData).forEach(([cat, val]) => {
+    if (val > 0 && cat !== '🏠 Acquisto Casa') {
+      pieLabels.push(cat); pieData.push(val);
+      pieColors.push(catColors[cat] || '#58a6ff');
+    }
+  });
+
+  CH_COINT.pie = new Chart(document.getElementById('ch-coint-pie'), {
+    type: 'doughnut',
+    data: { labels: pieLabels, datasets:[{ data: pieData, backgroundColor: pieColors, borderWidth:0 }]},
+    options: { responsive:true, plugins:{ legend:{ position:'right', labels:{ color:'#8b949e', font:{size:10}, boxWidth:10 }}}}
+  });
+
+  // Monthly trend for selected year
+  const months = Array.from({length:12},(_,i)=>i+1);
+  const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const monthlySpese = months.map(m => {
+    const d = C.monthly.find(r => r.year === COINT_YEAR && r.month === m);
+    return d ? d._spese : 0;
+  });
+  const monthlyVers = months.map(m => {
+    const d = C.monthly.find(r => r.year === COINT_YEAR && r.month === m);
+    return d ? Math.abs(d._versamenti) : 0;
+  });
+
+  CH_COINT.monthly = new Chart(document.getElementById('ch-coint-monthly'), {
+    type: 'bar',
+    data: { labels: MESI, datasets:[
+      { label:'Spese', data: monthlySpese, backgroundColor:'rgba(239,68,68,.7)', borderRadius:4 },
+      { label:'Versamenti', data: monthlyVers, backgroundColor:'rgba(59,130,246,.7)', borderRadius:4 },
+    ]},
+    options: COPTS,
+  });
+
+  buildTableSaldo();
+  buildKPIMutuo();
+  buildChartMutuo();
+}
+
+let SALDO_YEAR = 'all';
+let SALDO_HIDDEN_COLS = new Set();
+
+function buildTableSaldo() {
+  const C = D.coint;
+  if (!C.cumulativeData?.length) return;
+
+  const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+  // All categories present in at least one month with actual data
+  const allCats = [...new Set(
+    C.cumulativeData.flatMap(d =>
+      Object.keys(d).filter(k =>
+        k !== 'year' && k !== 'month' && k !== 'label' && k !== 'net' && k !== 'cumulative'
+      )
+    )
+  )].sort();
+
+  // Init hidden cols on first call
+  if (SALDO_HIDDEN_COLS.size === 0) {
+    ['🏠 Acquisto Casa','ASSICURAZIONE FINANZIAMENTO','BONIFICO INIZIALE',
+     'SPESE ACQUISTO CASA FINANZIAMENTO','SPESE ACQUISTO CASA'].forEach(c => {
+      if (allCats.includes(c)) SALDO_HIDDEN_COLS.add(c);
+    });
+  }
+
+  // Group by year
+  const byYear = {};
+  C.cumulativeData.forEach(d => {
+    if (!byYear[d.year]) byYear[d.year] = {};
+    byYear[d.year][d.month] = d;
+  });
+  const years = Object.keys(byYear).map(Number).sort();
+
+  // Year pills
+  const pillsEl = document.getElementById('pills-saldo-year');
+  if (pillsEl) {
+    pillsEl.innerHTML = '';
+    const addPill = (lbl, val) => {
+      const b = document.createElement('button');
+      b.className = 'pill' + (SALDO_YEAR === val ? ' on' : '');
+      b.textContent = lbl;
+      b.onclick = () => { SALDO_YEAR = val; buildTableSaldo(); };
+      pillsEl.appendChild(b);
+    };
+    addPill('Tutti', 'all');
+    years.forEach(y => addPill(y, y));
+  }
+
+  // Column toggles
+  const toggleEl = document.getElementById('saldo-col-toggles');
+  if (toggleEl) {
+    toggleEl.innerHTML = '<span class="tb-label" style="line-height:26px;margin-right:4px">Colonne:</span>';
+    allCats.forEach(cat => {
+      const b = document.createElement('button');
+      const hidden = SALDO_HIDDEN_COLS.has(cat);
+      b.className = 'col-toggle ' + (hidden ? 'off' : 'on');
+      b.textContent = cat;
+      b.onclick = () => {
+        if (SALDO_HIDDEN_COLS.has(cat)) SALDO_HIDDEN_COLS.delete(cat);
+        else SALDO_HIDDEN_COLS.add(cat);
+        buildTableSaldo();
+      };
+      toggleEl.appendChild(b);
+    });
+  }
+
+  // Visible cats only
+  const visCats = allCats.filter(c => !SALDO_HIDDEN_COLS.has(c));
+  const filteredYears = SALDO_YEAR === 'all' ? years : [Number(SALDO_YEAR)];
+
+  let h = `<thead><tr>
+    <th style="min-width:44px">Mese</th>
+    ${visCats.map(c => `<th style="min-width:85px">${c}</th>`).join('')}
+    <th style="min-width:80px">Netto</th>
+    <th style="min-width:90px">Saldo Cum.</th>
+  </tr></thead><tbody>`;
+
+  for (const year of filteredYears) {
+    if (SALDO_YEAR === 'all') {
+      h += `<tr style="background:rgba(88,166,255,.08)">
+        <td colspan="${visCats.length + 3}" style="font-weight:700;color:var(--blue);padding:8px 14px;font-size:12px">📅 ${year}</td>
+      </tr>`;
+    }
+
+    const yearMonths = byYear[year] || {};
+    let yearNetTot = 0;
+
+    for (let m = 1; m <= 12; m++) {
+      const d = yearMonths[m];
+      if (!d) continue; // skip months with no data
+      // Skip rows where all visible cats AND net are zero
+      const hasData = visCats.some(cat => d[cat] && d[cat] !== 0) || d.net !== 0;
+      if (!hasData) continue;
+
+      yearNetTot += d.net;
+      h += `<tr><td style="font-weight:500">${MESI[m-1]}</td>`;
+      visCats.forEach(cat => {
+        const v = d[cat] || 0;
+        const isBon = cat.includes('Bonifici');
+        const display = v !== 0 ? euro(Math.abs(v)) : '—';
+        const cls = v === 0 ? '' : (isBon ? '' : (v > 0 ? 'rE' : 'rR'));
+        const style = v !== 0 && isBon ? 'color:var(--blue)' : '';
+        h += `<td class="${cls}" style="${style}">${display}</td>`;
+      });
+      // Invert logic: negative net = surplus (more received), positive = deficit
+      const netDisp = euro(Math.abs(d.net));
+      const cumDisp = euro(Math.abs(d.cumulative));
+      const netCls = d.net <= 0 ? 'rE' : 'rR';   // surplus=green, deficit=red
+      const cumCls = d.cumulative <= 0 ? 'rE' : 'rR';
+      h += `<td class="${netCls}" style="font-weight:600">${netDisp}</td>`;
+      h += `<td class="${cumCls}" style="font-weight:700">${cumDisp}</td>`;
+      h += `</tr>`;
+    }
+
+    // Year subtotal
+    const lastMonth = Object.values(yearMonths).filter(d=>d).sort((a,b)=>b.month-a.month)[0];
+    const yearCum = lastMonth?.cumulative ?? 0;
+    h += `<tr style="border-top:1.5px solid var(--border);background:rgba(255,255,255,.03);font-weight:600">
+      <td style="color:var(--muted);font-size:11px">Tot. ${year}</td>
+      ${visCats.map(cat => {
+        const tot = Object.values(yearMonths).reduce((s,d) => s+(d[cat]||0), 0);
+        const isBon = cat.includes('Bonifici');
+        return `<td style="${isBon&&tot?'color:var(--blue)':''}">${tot!==0?euro(Math.abs(tot)):'—'}</td>`;
+      }).join('')}
+      <td class="${yearNetTot<=0?'rE':'rR'}">${euro(Math.abs(yearNetTot))}</td>
+      <td class="${yearCum<=0?'rE':'rR'}">${euro(Math.abs(yearCum))}</td>
+    </tr>`;
+  }
+
+  h += '</tbody>';
+  document.getElementById('t-coint-saldo').innerHTML = h;
+}
+
+function buildKPIMutuo() {
+  const C = D.coint;
+  if (!C.amortData?.length) return;
+
+  const now = new Date();
+  // Current entries: last entry with date <= today
+  const current = [...C.amortData].reverse().find(d => d.date <= now);
+  const residuoMutuo = current?.mutuo ?? 0;
+  const residuoAssic = current?.assic ?? 0;
+
+  const totaleMutuo = 150500.93;
+  const totaleAssic = 5340;
+  const pagatoMutuo = totaleMutuo - residuoMutuo;
+  const pctMutuo = (pagatoMutuo / totaleMutuo * 100).toFixed(1);
+
+  // End dates
+  const endMutuo = C.amortData.filter(d => d.mutuo !== null && d.mutuo > 1).slice(-1)[0]?.date;
+  const endAssic = C.amortData.filter(d => d.assic !== null && d.assic > 1).slice(-1)[0]?.date;
+  const fmtDate = d => d ? d.toLocaleDateString('it-IT',{month:'long',year:'numeric'}) : '—';
+
+  const rateRimMutuo = C.amortData.filter(d => d.date > now && d.mutuo !== null && d.mutuo > 1).length;
+  const rateRimAssic = C.amortData.filter(d => d.date > now && d.assic !== null && d.assic > 1).length;
+
+  const cards = [
+    { lbl:'🏠 Debito Mutuo Residuo',  val: euro(residuoMutuo), cls:'ora', c:'c2',
+      sub: `${pctMutuo}% estinto · ${rateRimMutuo} rate rimanenti` },
+    { lbl:'✅ Quota Mutuo Pagata',     val: euro(pagatoMutuo), cls:'pos', c:'c1',
+      sub: `Su ${euro(totaleMutuo)} totali` },
+    { lbl:'📅 Fine Mutuo',            val: fmtDate(endMutuo), cls:'neu', c:'c3',
+      sub: `${(rateRimMutuo/12).toFixed(1)} anni rimanenti` },
+    { lbl:'🛡️ Debito Assic. Residuo', val: euro(residuoAssic), cls:'blu', c:'c0',
+      sub: `Fine: ${fmtDate(endAssic)} · ${rateRimAssic} rate rimanenti` },
+  ];
+
+  document.getElementById('kpis-mutuo').innerHTML = cards.map(k => `
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}" style="font-size:20px">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+function buildChartMutuo() {
+  if (CH_COINT.mutuo) { CH_COINT.mutuo.destroy(); delete CH_COINT.mutuo; }
+  const C = D.coint;
+  if (!C.amortData?.length) return;
+  const isMobile = window.innerWidth <= 480;
+
+  const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  const baseYear = 2020, baseMonth = 10; // Nov 2020
+
+  // Every 3 months for readability
+  const step = 3;
+  const filtered = C.amortData.filter((_,i) => i % step === 0);
+
+  const labels = filtered.map((_, i) => {
+    const totalMonths = baseMonth + (i * step);
+    const y = baseYear + Math.floor(totalMonths / 12);
+    const m = totalMonths % 12;
+    return `${MESI[m]} ${String(y).slice(2)}`;
+  });
+
+  const mutuo = filtered.map(d => d.mutuo > 0.1 ? Math.round(d.mutuo) : 0);
+  const assic = filtered.map(d => d.assic !== null && d.assic > 0.1 ? Math.round(d.assic) : 0);
+
+  // Today marker
+  const now = new Date();
+  const monthsSinceStart = (now.getFullYear() - baseYear) * 12 + (now.getMonth() - baseMonth);
+  const todayIdx = Math.floor(monthsSinceStart / step);
+
+  CH_COINT.mutuo = new Chart(document.getElementById('ch-coint-mutuo'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'Mutuo Casa',
+        data: mutuo,
+        backgroundColor: 'rgba(249,115,22,.8)',
+        borderWidth: 0,
+        stack: 'total' },
+      { label: 'Assic. Personale',
+        data: assic,
+        backgroundColor: 'rgba(139,92,246,.8)',
+        borderWidth: 0,
+        stack: 'total' },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color:'#8b949e', font:{family:'DM Sans',size: isMobile?9:11}, boxWidth:10, padding:12 }},
+        tooltip: {
+          callbacks: {
+            label: item => `${item.dataset.label}: ${item.parsed.y.toLocaleString('it-IT')} €`,
+            afterBody: items => {
+              const tot = items.reduce((s,i) => s + i.parsed.y, 0);
+              return ['─────────────', `Totale: ${tot.toLocaleString('it-IT')} €`];
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true,
+          ticks: { color:'#4a5272', font:{family:'DM Sans',size: isMobile?9:10}, maxTicksLimit: isMobile?6:15 },
+          grid: { color:'rgba(48,54,61,.5)' }, border:{ color:'transparent' }
+        },
+        y: { stacked: true, min: 0,
+          ticks: { color:'#4a5272', font:{family:'DM Sans',size: isMobile?9:10},
+            callback: v => v >= 1000 ? `${(v/1000).toFixed(0)}k€` : `${v}€` },
+          grid: { color:'rgba(48,54,61,.5)' }, border:{ color:'transparent' }
+        }
+      },
+      animation: { onComplete: function() {
+        const chart = this;
+        if (todayIdx < 0 || todayIdx >= chart.data.labels.length) return;
+        const ctx2 = chart.ctx;
+        const x = chart.scales.x.getPixelForValue(todayIdx);
+        const top = chart.scales.y.top;
+        const bot = chart.scales.y.bottom;
+        ctx2.save();
+        ctx2.strokeStyle = '#58a6ff';
+        ctx2.lineWidth = 1.5;
+        ctx2.setLineDash([6,3]);
+        ctx2.beginPath(); ctx2.moveTo(x, top); ctx2.lineTo(x, bot); ctx2.stroke();
+        ctx2.setLineDash([]);
+        ctx2.fillStyle = '#58a6ff';
+        ctx2.font = '10px DM Sans, sans-serif';
+        ctx2.fillText('Oggi', x + 4, top + 14);
+        ctx2.restore();
+      }}
+    }
+  });
+}
+
+function buildTableCoint() {
+  const C = D.coint;
+  const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+
+  let h = `<thead><tr><th>Mese</th>`;
+  C.allCats.forEach(cat => h += `<th>${cat}</th>`);
+  h += `<th>Totale Spese</th><th>Versamenti</th><th>Margine</th></tr></thead><tbody>`;
+
+  // Show months for selected year
+  for (let m = 1; m <= 12; m++) {
+    const d = C.monthly.find(r => r.year === COINT_YEAR && r.month === m);
+    if (!d) continue;
+    h += `<tr><td>${MESI[m-1]}</td>`;
+    C.allCats.forEach(cat => {
+      const v = d[cat] || 0;
+      h += `<td class="${v > 0 ? 'rE' : v < 0 ? 'rR' : ''}">${v !== 0 ? euro(v) : '—'}</td>`;
+    });
+    const marg = d._versamenti + d._spese;
+    h += `<td class="rT">${euro(d._spese)}</td>`;
+    h += `<td class="rT" style="color:var(--blue)">${euro(Math.abs(d._versamenti))}</td>`;
+    h += `<td class="${marg >= 0 ? 'rE' : 'rR'}">${euro(marg)}</td></tr>`;
+  }
+  h += '</tbody>';
+  document.getElementById('t-coint').innerHTML = h;
+}
+
+function buildPillsCointMonth() {
+  const c = document.getElementById('pills-coint-month');
+  c.innerHTML = '<span class="tb-label">Mese</span>';
+  const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const available = D.coint.monthly.filter(r => r.year === COINT_YEAR);
+  available.forEach(r => {
+    const b = document.createElement('button');
+    const key = `${r.year}-${r.month}`;
+    b.className = 'pill' + (key === COINT_MONTH ? ' on' : '');
+    b.textContent = `${MESI[r.month-1]} ${r.year}`;
+    b.onclick = () => { COINT_MONTH = key; buildPillsCointMonth(); buildKPICointMonth(); };
+    c.appendChild(b);
+  });
+}
+
+function buildKPICointMonth() {
+  if (!COINT_MONTH) return;
+  const [yr, mo] = COINT_MONTH.split('-').map(Number);
+  const C = D.coint;
+  const cur = C.monthly.find(r => r.year === yr && r.month === mo);
+  if (!cur) return;
+
+  const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const label = `${MESI[mo-1]} ${yr}`;
+
+  const spese = cur._spese || 0;
+  const vers  = Math.abs(cur._versamenti || 0);
+  const marg  = (cur._versamenti || 0) + (cur._spese || 0);
+  const mutuo = cur['🏠 Mutuo'] || 0;
+  const condo = cur['🏢 Condominio'] || 0;
+
+  // Saldo accumulato up to this month
+  const cumEntry = C.cumulativeData.find(d => d.year === yr && d.month === mo);
+  const saldoCumM = cumEntry ? cumEntry.cumulative : 0;
+  const saldoIsSurplusM = saldoCumM <= 0;
+
+  const cards = [
+    { lbl:`💸 Spese — ${label}`,      val:euro(spese), cls:'ora', c:'c2', sub:'Totale uscite mese' },
+    { lbl:`💰 Versamenti — ${label}`, val:euro(vers),  cls:'blu', c:'c1', sub:'Bonifici sul conto' },
+    { lbl:`📈 Margine — ${label}`,    val:euro(Math.abs(marg)), cls:marg<=0?'pos':'neg', c:'c0',
+      sub: marg<=0 ? '✅ Surplus' : '⚠️ Deficit' },
+    { lbl:`📊 Saldo Accumulato`,      val:euro(Math.abs(saldoCumM)),
+      cls: saldoIsSurplusM ? 'pos' : 'neg', c:'c3',
+      sub: saldoIsSurplusM ? '✅ Saldo positivo' : '⚠️ Saldo negativo' },
+  ];
+
+  // Detail by category
+  const catDetail = Object.entries(cur)
+    .filter(([k,v]) => !k.startsWith('_') && k !== 'year' && k !== 'month' && k !== 'key' && v !== 0 && typeof v === 'number')
+    .sort((a,b) => Math.abs(b[1]) - Math.abs(a[1]));
+
+  // For display: bonifici are income (negative in data), show as positive with different label
+  const isBonifici = (k) => k.includes('Bonifici');
+
+  document.getElementById('kpis-coint-month').innerHTML = cards.map(k => `
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('') + `
+    <div class="tcard" style="grid-column:1/-1;margin-top:4px">
+      <div style="padding:10px 14px 6px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);border-bottom:1px solid var(--border)">
+        Dettaglio categorie — ${label}
+      </div>
+      <table><tbody>
+        ${catDetail.map(([cat,val]) => {
+          const isIncome = isBonifici(cat);
+          const display = euro(Math.abs(val));
+          const color = isIncome ? 'var(--blue)' : 'var(--orange)';
+          return `<tr>
+            <td>${cat}</td>
+            <td style="text-align:right;color:${color}">${display}</td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+    </div>`;
+}
+
+//  Everything is injected dynamically so the app works
+//  as a single self-contained HTML file.
+// ══════════════════════════════════════════════════════
+(function initPWA() {
+
+  // ── 1. Generate app icon as a canvas-drawn PNG (no external assets needed) ──
+  function makeIconDataURL(size) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const r = size * 0.12;
+
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, size, size);
+    bg.addColorStop(0, '#1a237e');
+    bg.addColorStop(1, '#0d1117');
+    ctx.beginPath();
+    ctx.moveTo(r, 0); ctx.lineTo(size-r, 0);
+    ctx.quadraticCurveTo(size, 0, size, r);
+    ctx.lineTo(size, size-r);
+    ctx.quadraticCurveTo(size, size, size-r, size);
+    ctx.lineTo(r, size);
+    ctx.quadraticCurveTo(0, size, 0, size-r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fillStyle = bg;
+    ctx.fill();
+
+    // Chart bars icon
+    const pad = size * 0.18;
+    const barW = size * 0.1;
+    const gap = size * 0.06;
+    const baseY = size - pad;
+    const heights = [0.38, 0.55, 0.72, 0.5, 0.85, 0.62];
+    const colors = ['#3B82F6','#58a6ff','#3fb950','#58a6ff','#EAB308','#3B82F6'];
+    const totalW = heights.length * (barW + gap) - gap;
+    const startX = (size - totalW) / 2;
+
+    heights.forEach((h, i) => {
+      const x = startX + i * (barW + gap);
+      const barH = (size - pad * 2) * h;
+      const grad = ctx.createLinearGradient(0, baseY - barH, 0, baseY);
+      grad.addColorStop(0, colors[i]);
+      grad.addColorStop(1, colors[i] + '88');
+      ctx.fillStyle = grad;
+      const br = barW * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(x + br, baseY - barH);
+      ctx.lineTo(x + barW - br, baseY - barH);
+      ctx.quadraticCurveTo(x + barW, baseY - barH, x + barW, baseY - barH + br);
+      ctx.lineTo(x + barW, baseY);
+      ctx.lineTo(x, baseY);
+      ctx.lineTo(x, baseY - barH + br);
+      ctx.quadraticCurveTo(x, baseY - barH, x + br, baseY - barH);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    // "€" symbol
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = `bold ${size * 0.28}px serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText('€', size - pad * 0.6, pad * 0.5);
+
+    return c.toDataURL('image/png');
+  }
+
+  const icon192 = makeIconDataURL(192);
+  const icon512 = makeIconDataURL(512);
+
+  // ── 2. Inject Web App Manifest as a Blob URL ──
+  const manifest = {
+    name: 'Piano Risparmi',
+    short_name: 'Risparmi',
+    description: 'Dashboard personale per spese, risparmi e consumi energetici',
+    start_url: '.',
+    display: 'standalone',
+    background_color: '#0d1117',
+    theme_color: '#0d1117',
+    orientation: 'any',
+    categories: ['finance', 'productivity'],
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    ]
+  };
+
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  document.getElementById('pwa-manifest').href = manifestURL;
+  document.getElementById('pwa-icon-apple').href = icon192;
+
+  // ── 3. Register Service Worker (inline as a Blob) ──
+  // Caches the page for offline use
+  const swCode = `
+const CACHE = 'risparmi-v1';
+const CDN = [
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js',
+];
+
+self.addEventListener('install', e => {
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then(cache => cache.addAll(CDN).catch(() => {})));
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(clients.claim());
+});
+
+self.addEventListener('fetch', e => {
+  // Cache-first for CDN assets, network-first for everything else
+  if (CDN.some(url => e.request.url.includes(url.split('/').pop()))) {
+    e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    })));
+  }
+});
+`;
+
+  if ('serviceWorker' in navigator) {
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swURL = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL, { scope: './' })
+      .then(() => console.log('SW registered'))
+      .catch(e => console.log('SW registration skipped:', e.message));
+  }
+
+  // ── 4. Install prompt banner ──
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showInstallBanner();
+  });
+
+  function showInstallBanner() {
+    if (document.getElementById('pwa-banner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'pwa-banner';
+    banner.innerHTML = `
+      <style>
+        #pwa-banner {
+          position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+          background: #1f2937; border: 1px solid #3B82F6;
+          border-radius: 14px; padding: 14px 20px;
+          display: flex; align-items: center; gap: 14px;
+          z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+          max-width: 380px; width: calc(100% - 40px);
+          animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { opacity:0; transform: translateX(-50%) translateY(20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+        #pwa-banner img { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; }
+        #pwa-banner-text { flex: 1; }
+        #pwa-banner-text strong { display: block; color: #e6edf3; font-size: 13px; margin-bottom: 2px; }
+        #pwa-banner-text span { color: #8b949e; font-size: 11px; }
+        #pwa-install-btn {
+          background: #3B82F6; color: white; border: none;
+          border-radius: 8px; padding: 8px 16px; font-size: 13px;
+          font-weight: 600; cursor: pointer; white-space: nowrap;
+          font-family: 'DM Sans', sans-serif;
+        }
+        #pwa-install-btn:hover { background: #2563eb; }
+        #pwa-dismiss-btn {
+          background: none; border: none; color: #8b949e;
+          cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1;
+          flex-shrink: 0;
+        }
+      </style>
+      <img src="${icon192}" alt="icon">
+      <div id="pwa-banner-text">
+        <strong>Installa Piano Risparmi</strong>
+        <span>Aggiungila alla schermata home</span>
+      </div>
+      <button id="pwa-install-btn">Installa</button>
+      <button id="pwa-dismiss-btn">✕</button>
+    `;
+    document.body.appendChild(banner);
+
+    document.getElementById('pwa-install-btn').onclick = async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      banner.remove();
+    };
+
+    document.getElementById('pwa-dismiss-btn').onclick = () => {
+      banner.remove();
+      sessionStorage.setItem('pwa-dismissed', '1');
+    };
+  }
+
+  // Show banner if already dismissed this session, don't show again
+  window.addEventListener('appinstalled', () => {
+    const b = document.getElementById('pwa-banner');
+    if (b) b.remove();
+    console.log('App installed!');
+  });
+
+})();
+</script>
+</body>
+</html>
