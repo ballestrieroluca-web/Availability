@@ -345,6 +345,61 @@ tr.rH{background:rgba(88,166,255,.03)}
   .cgrid { grid-template-columns: 1fr; }
 }
 
+/* ── Tab: scorrimento orizzontale su schermi stretti ── */
+.page-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.page-tabs::-webkit-scrollbar{display:none}
+.page-tab{white-space:nowrap;flex:0 0 auto}
+
+/* ── Banner controllo integrità ── */
+.integrity{background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.45);border-radius:10px;
+  padding:12px 16px;margin:0 0 18px;font-size:12px;color:var(--text);line-height:1.55}
+.integrity strong{color:#f59e0b;display:block;margin-bottom:4px;font-size:13px}
+.integrity ul{margin:4px 0 0 18px;padding:0}
+.integrity li{margin:2px 0;color:var(--muted)}
+.integrity button{float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1}
+
+/* ── Finestra password ── */
+#pw-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;
+  justify-content:center;z-index:10000;padding:20px}
+.pw-box{background:var(--surf);border:1px solid var(--border);border-radius:16px;padding:26px 24px;
+  width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.pw-title{font-size:18px;font-weight:600;margin-bottom:6px}
+.pw-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.pw-err{font-size:12px;color:var(--red);margin-bottom:10px}
+.pw-box input[type=password]{width:100%;padding:11px 12px;border-radius:10px;border:1.5px solid var(--border);
+  background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;outline:none}
+.pw-box input[type=password]:focus{border-color:var(--blue)}
+.pw-rem{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin:12px 0 16px}
+.pw-btns{display:flex;gap:10px;justify-content:flex-end}
+.pw-btns button{padding:9px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--surf);
+  color:var(--text);cursor:pointer;font-family:inherit;font-size:13px;font-weight:500}
+.pw-btns button.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+
+/* ── Simulatore mutuo ── */
+.sim-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:18px}
+.sim-title{font-size:14px;font-weight:600;margin-bottom:6px}
+.sim-now{font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.sim-f{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px}
+.sim-f input{padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);
+  color:var(--text);font-size:15px;font-family:inherit;font-weight:500;outline:none;text-transform:none;letter-spacing:0}
+.sim-f input:focus{border-color:var(--blue)}
+.sim-f small{font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.4}
+.sim-mode{display:flex;gap:8px;flex-wrap:wrap}
+.sim-adv{margin-top:16px;font-size:12px;color:var(--muted)}
+.sim-adv summary{cursor:pointer;margin-bottom:12px}
+.sim-note{font-size:11px;color:var(--muted);line-height:1.6;margin-top:14px;padding:12px 14px;
+  background:var(--surf);border:1px solid var(--border);border-radius:10px}
+.sim-warn{background:rgba(239,68,68,.10);border:1px solid rgba(239,68,68,.4);color:var(--red);
+  border-radius:10px;padding:12px 14px;font-size:12px;margin-bottom:14px}
+#sim-kpis{grid-template-columns:repeat(3,1fr)}
+@media(max-width:700px){
+  .sim-grid{grid-template-columns:1fr 1fr}
+  #sim-kpis{grid-template-columns:1fr 1fr}
+}
+@media(max-width:480px){ .sim-grid{grid-template-columns:1fr} }
+
 /* PAGE TABS */
 .page-tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:0}
 .page-tab{
@@ -500,15 +555,16 @@ tr.rH{background:rgba(88,166,255,.03)}
         <span id="upsub">.xlsm / .xlsx — trascina o clicca</span>
       </div>
     </label>
-    <button class="gdrive-btn" id="gdrive-btn" onclick="loadFromOneDrive()">
-      <svg width="18" height="18" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
-      <span id="gdrive-label">Aggiorna da OneDrive</span>
+    <button class="gdrive-btn" id="gdrive-btn" onclick="loadAuto()">
+      <span style="font-size:17px;line-height:1">↻</span>
+      <span id="gdrive-label">Aggiorna dati</span>
     </button>
   </div>
   <input type="file" id="fi" accept=".xlsx,.xlsm,.xls">
 </header>
 
 <div id="dbg"></div>
+<div id="integrity-banner" class="integrity hidden"></div>
 
 <!-- PAGE TABS -->
 <div class="page-tabs">
@@ -516,6 +572,7 @@ tr.rH{background:rgba(88,166,255,.03)}
   <button class="page-tab" id="tab-bilancio" onclick="switchPage('bilancio')">📊 Bilancio</button>
   <button class="page-tab" id="tab-energia" onclick="switchPage('energia')">⚡ Gas & Energia</button>
   <button class="page-tab" id="tab-coint" onclick="switchPage('coint')">🏦 Cointestato</button>
+  <button class="page-tab" id="tab-sim" onclick="switchPage('sim')">🧮 Simulatore</button>
 </div>
 
 <!-- PAGE HOME -->
@@ -816,9 +873,10 @@ tr.rH{background:rgba(88,166,255,.03)}
 
     <div class="cgrid">
       <div class="cc full">
-        <div class="cc-title">Proiezione Mutuo — Debito Residuo fino a Ottobre 2040</div>
+        <div class="cc-title"><span id="mutuo-chart-title">Proiezione Mutuo — rate residue da pagare</span></div>
         <canvas id="ch-coint-mutuo"></canvas>
       </div>
+    </div>
 
     <!-- Tabella dettaglio mensile -->
     <div class="sec" id="sec-coint-table">
@@ -830,6 +888,58 @@ tr.rH{background:rgba(88,166,255,.03)}
   </div>
 </div><!-- /page-coint -->
 
+<!-- PAGE SIMULATORE MUTUO -->
+<div id="page-sim" class="hidden">
+  <div id="empty-sim" class="hidden">
+    <div class="empty-ic">🧮</div>
+    <h2>Nessun dato caricato</h2>
+    <p>Carica il file Excel per usare il simulatore del mutuo.</p>
+  </div>
+  <div id="dash-sim" class="hidden">
+    <div class="sim-card">
+      <div class="sim-title">🧮 Simulatore mutuo — estinzione parziale e nuovo tasso</div>
+      <div class="sim-now" id="sim-now"></div>
+      <div class="sim-grid">
+        <label class="sim-f"><span>Capitale residuo (€)</span>
+          <input id="sim-cap" type="text" inputmode="decimal" autocomplete="off">
+          <small id="sim-cap-help"></small></label>
+        <label class="sim-f"><span>Versamento straordinario (€)</span>
+          <input id="sim-vers" type="text" inputmode="decimal" autocomplete="off"></label>
+        <label class="sim-f"><span>Nuovo tasso annuo (%)</span>
+          <input id="sim-tan" type="text" inputmode="decimal" autocomplete="off"></label>
+        <div class="sim-f"><span>Cosa mantieni?</span>
+          <div class="sim-mode">
+            <button type="button" id="sim-m-rata" class="pill on">La rata</button>
+            <button type="button" id="sim-m-dur" class="pill">La durata</button>
+          </div></div>
+        <label class="sim-f" id="sim-f-rata"><span>Rata mensile (€)</span>
+          <input id="sim-rata" type="text" inputmode="decimal" autocomplete="off"></label>
+        <label class="sim-f hidden" id="sim-f-dur"><span>Durata (anni)</span>
+          <input id="sim-anni" type="text" inputmode="decimal" autocomplete="off">
+          <small id="sim-dur-help"></small></label>
+      </div>
+      <details class="sim-adv">
+        <summary>Situazione attuale del mutuo (modificabile)</summary>
+        <div class="sim-grid">
+          <label class="sim-f"><span>Tasso attuale (%)</span>
+            <input id="sim-tan0" type="text" inputmode="decimal" autocomplete="off"></label>
+          <label class="sim-f"><span>Rata attuale (€)</span>
+            <input id="sim-rata0" type="text" inputmode="decimal" autocomplete="off"></label>
+          <label class="sim-f"><span>Rate residue</span>
+            <input id="sim-n0" type="text" inputmode="numeric" autocomplete="off"></label>
+        </div>
+      </details>
+    </div>
+    <div id="sim-warn"></div>
+    <div class="kpi-grid" id="sim-kpis"></div>
+    <div class="sec" style="margin-top:6px">
+      <div class="sec-hd"><span class="sec-title">📋 Confronto scenari</span></div>
+      <div class="tcard"><div class="tscroll"><table id="sim-table"></table></div></div>
+    </div>
+    <div class="sim-note" id="sim-note"></div>
+  </div>
+</div><!-- /page-sim -->
+
 <script>
 // ══════════════════════════════════════════════════════
 //  GLOBALS
@@ -837,7 +947,9 @@ tr.rH{background:rgba(88,166,255,.03)}
 let D = null, SEL = null, SEL_MODE = 'annual', SEL_MONTH = null, CH = {};
 
 // ══════════════════════════════════════════════════════
-//  UPLOAD
+//  CARICAMENTO DATI
+//  1) manuale: file Excel scelto da dispositivo
+//  2) automatico: dati.enc (cifrato AES-GCM) pubblicato dal workflow
 // ══════════════════════════════════════════════════════
 const dz = document.getElementById('dz');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
@@ -845,42 +957,116 @@ dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
 document.getElementById('fi').addEventListener('change', e => { if(e.target.files[0]) load(e.target.files[0]); });
 
+const PW_KEY = 'dash-pw-v1';
+let CUR_PAGE = 'home';
+
+function escHtml(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── Controllo integrità: segnala righe/fogli che non trova più ──
+const INTEG = { missing: new Set(), warnings: [] };
+// Voci cercate per nome che nel file attuale NON esistono: non generano avvisi
+const OPTIONAL_ROWS = new Set(['Valutazione: gestione conto']);
+function integWarn(msg) { if (!INTEG.warnings.includes(msg)) INTEG.warnings.push(msg); }
+function expectLabel(raw, idx, kw, sheet, excelRow) {
+  const kws = [].concat(kw);
+  const row = (raw && raw[idx]) || [];
+  const ok = row.slice(0, 4).some(c => typeof c === 'string' && kws.some(k => c.toLowerCase().includes(k)));
+  if (!ok) integWarn(`${sheet}: alla riga ${excelRow} mi aspettavo «${kws.join('» o «')}» ma non c'è. Hai inserito o spostato righe? I valori collegati potrebbero essere sbagliati.`);
+}
+const REQUIRED_SHEETS = ['BILANCIO','ANALISI CONSUMI GAS ENERGIA','SPESE COINTESTATO',
+  'Analisi Spese Cointestato','Gestione finanziamenti','Valutazione Spese e Risparmi'];
+function checkSheets(wb) {
+  const have = wb.SheetNames.map(n => n.trim().toLowerCase());
+  REQUIRED_SHEETS.forEach(n => {
+    if (!have.includes(n.toLowerCase())) integWarn(`Foglio «${n}» non trovato: la relativa sezione resterà vuota.`);
+  });
+}
+function checkMissingRows() {
+  const miss = [...INTEG.missing].filter(k => !OPTIONAL_ROWS.has(k));
+  if (miss.length) integWarn(`Voci non trovate: ${miss.map(k => '«' + k + '»').join(', ')}. Se hai rinominato una riga nel foglio, i valori collegati risultano 0.`);
+}
+function renderIntegrity() {
+  const el = document.getElementById('integrity-banner');
+  if (!el) return;
+  if (!INTEG.warnings.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  const n = INTEG.warnings.length;
+  el.classList.remove('hidden');
+  el.innerHTML = `<button onclick="this.parentNode.classList.add('hidden')" title="Chiudi">✕</button>
+    <strong>⚠️ Controllo dati — ${n} segnalazion${n === 1 ? 'e' : 'i'}</strong>
+    <ul>${INTEG.warnings.map(w => `<li>${escHtml(w)}</li>`).join('')}</ul>`;
+}
+
+// ── Data di aggiornamento ──
+function fmtDT(d) {
+  return d.toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function setFreshness(wb, extra) {
+  const el = document.getElementById('h-sub');
+  const parts = [];
+  let modD = extra.fileDate || null;
+  if (!modD && wb.Props && wb.Props.ModifiedDate) modD = new Date(wb.Props.ModifiedDate);
+  if (modD && !isNaN(modD)) parts.push(`Excel salvato il ${fmtDT(modD)}`);
+  let stale = false;
+  if (extra.sync) {
+    const s = new Date(extra.sync);
+    if (!isNaN(s)) { parts.push(`sincronizzato il ${fmtDT(s)}`); stale = (Date.now() - s) / 36e5 > 36; }
+  }
+  if (!parts.length) parts.push(`Anni disponibili: ${D.years.join(', ')}`);
+  el.textContent = parts.join(' · ') + (stale ? ' · ⚠ sincronizzazione ferma da oltre 36 ore' : '');
+  el.style.color = stale ? 'var(--orange)' : '';
+}
+
+// ── Elaborazione di un workbook (unico punto di ingresso) ──
+function processWorkbook(wb, label, extra = {}) {
+  INTEG.missing = new Set(); INTEG.warnings = [];
+  D = parse(wb);
+  D._sheetNames = wb.SheetNames;
+  D.energia = parseEnergia(wb);
+  extractBudget(wb);
+  D.coint = parseCoint(wb);
+  D.mutuo = parseMutuo(wb);
+  D.acqCat = parseAcqCategorie(wb);
+  SEL = D.years[D.years.length - 1];
+  checkSheets(wb);
+  checkMissingRows();
+
+  document.getElementById('upic').textContent = '✅';
+  document.getElementById('uptitle').textContent = label.length > 30 ? label.slice(0, 27) + '…' : label;
+  document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
+  dz.classList.add('ok');
+  setFreshness(wb, extra);
+
+  render();
+  renderEnergia();
+  renderSim();
+  renderIntegrity();
+  switchPage(CUR_PAGE);
+}
+
+function showError(err) {
+  const dbg = document.getElementById('dbg');
+  dbg.style.display = 'block';
+  dbg.textContent = 'ERRORE: ' + err.message + '\n\n' + (err.stack || '');
+}
+
+// ── Caricamento manuale (file in chiaro) ──
 function load(file) {
   const r = new FileReader();
   r.onload = e => {
     try {
-      // cellDates:true converts serial dates to JS Date objects
-      const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
-      D = parse(wb);
-      D._sheetNames = wb.SheetNames;
-      D.energia = parseEnergia(wb);
-      extractBudget(wb);
-      D.coint = parseCoint(wb);
-      D.acqCat = parseAcqCategorie(wb);
-      SEL = D.years[D.years.length - 1];
-      document.getElementById('upic').textContent = '✅';
-      document.getElementById('uptitle').textContent = file.name.length > 30 ? file.name.slice(0,27)+'…' : file.name;
-      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
-      dz.classList.add('ok');
-      document.getElementById('h-sub').textContent = `Anni disponibili: ${D.years.join(', ')} · ${D.monthly.length} mesi di dati mensili`;
-      render();
-      renderEnergia();
-    } catch(err) {
-      document.getElementById('dbg').style.display = 'block';
-      document.getElementById('dbg').textContent = 'ERRORE: ' + err.message + '\n\n' + err.stack;
-    }
+      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+      processWorkbook(wb, file.name, { fileDate: file.lastModified ? new Date(file.lastModified) : null });
+    } catch (err) { showError(err); }
   };
   r.readAsArrayBuffer(file);
 }
 
-// Extract budget info from BILANCIO summary rows
+// Estrae i testi riassuntivi dalle prime righe di BILANCIO
 function extractBudget(wb) {
   try {
     const shName = wb.SheetNames.find(n=>n==='BILANCIO') || wb.SheetNames[0];
     const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName],{header:1,defval:null,raw:false});
-    // Row 3 (idx 2) = "Spesa Carta 1163,138 €"
-    // Row 4 (idx 3) = "Budget Rimanente 136,86 €"
-    // Row 5 (idx 4) = "Margine mensile 2026 491,8 €"
+    // Riga 3 = "Spesa Carta 1163,138 €", riga 4 = "Budget Rimanente 136,86 €", riga 5 = "Margine mensile 2026 491,8 €"
     const r2 = String((raw[2]||[])[1]||'');
     const r3 = String((raw[3]||[])[1]||'');
     const r4 = String((raw[4]||[])[1]||'');
@@ -893,184 +1079,128 @@ function extractBudget(wb) {
   } catch(e){ console.warn('Budget parse:',e.message); }
 }
 
+// ── Cifratura: AES-256-GCM, chiave da PBKDF2-SHA256 (200.000 iterazioni) ──
+// Formato file: salt(16) | iv(12) | testo cifrato + tag
+async function decryptBytes(buf, password) {
+  if (!(window.crypto && crypto.subtle)) throw new Error('Decifratura non disponibile: apri il sito in HTTPS');
+  const b = new Uint8Array(buf);
+  if (b.length < 45) throw new Error('File cifrato non valido');
+  const salt = b.slice(0, 16), iv = b.slice(16, 28), data = b.slice(28);
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+}
 
-// ══════════════════════════════════════════════════════
-//  ONEDRIVE AUTO-LOAD
-//  Uses the OneDrive Shares API — no proxy, no CORS issues
-// ══════════════════════════════════════════════════════
+function askPassword(message) {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.id = 'pw-overlay';
+    ov.innerHTML = `<div class="pw-box">
+      <div class="pw-title">🔒 Dati protetti</div>
+      <div class="pw-sub">Inserisci la password per sbloccare i dati.</div>
+      ${message ? `<div class="pw-err">${escHtml(message)}</div>` : ''}
+      <input type="password" id="pw-input" autocomplete="current-password" placeholder="Password">
+      <label class="pw-rem"><input type="checkbox" id="pw-remember" checked> Ricordami su questo dispositivo</label>
+      <div class="pw-btns"><button id="pw-cancel" type="button">Annulla</button><button id="pw-ok" class="primary" type="button">Sblocca</button></div>
+    </div>`;
+    document.body.appendChild(ov);
+    const inp = ov.querySelector('#pw-input');
+    inp.focus();
+    const done = v => { ov.remove(); resolve(v); };
+    ov.querySelector('#pw-ok').onclick = () => {
+      if (inp.value) done({ password: inp.value, remember: ov.querySelector('#pw-remember').checked });
+    };
+    ov.querySelector('#pw-cancel').onclick = () => done(null);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') ov.querySelector('#pw-ok').click(); });
+  });
+}
 
-// This URL is generated from the public share link via base64url encoding.
-// It works as long as the OneDrive file is shared as "Anyone with the link".
-const DROPBOX_URL = 'https://www.dropbox.com/scl/fi/4tngypsxhxyiiunq4fcsm/dati.xlsx?rlkey=xe3q06bklct4sqjsmxg93hsm8&st=1580uivv&dl=1';
+async function decryptWithPrompt(buf) {
+  let pw = null, remember = true, msg = '';
+  try { pw = localStorage.getItem(PW_KEY); } catch (e) {}
+  for (let attempt = 0; attempt < 5; attempt++) {
+    if (!pw) {
+      const r = await askPassword(msg);
+      if (r === null) { const c = new Error('Sblocco annullato'); c.name = 'UserCancelled'; throw c; }
+      pw = r.password; remember = r.remember;
+    }
+    try {
+      const out = await decryptBytes(buf, pw);
+      try { remember ? localStorage.setItem(PW_KEY, pw) : localStorage.removeItem(PW_KEY); } catch (e) {}
+      return out;
+    } catch (e) {
+      if (e.message && e.message.indexOf('HTTPS') >= 0) throw e;
+      try { localStorage.removeItem(PW_KEY); } catch (e2) {}
+      pw = null; msg = 'Password errata, riprova.';
+    }
+  }
+  throw new Error('Troppi tentativi con password errata');
+}
 
-// Fallback: the file hosted in the same GitHub Pages repo
-const GITHUB_URL = 'dati.xlsx';
-
-async function fetchWithTimeout(url, ms = 15000) {
+// ── Caricamento automatico ──
+async function fetchWithTimeout(url, ms = 20000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), ms);
   try {
-    const r = await fetch(url, { signal: ctrl.signal });
+    const r = await fetch(url, { signal: ctrl.signal, cache: 'no-store' });
     clearTimeout(t);
     return r;
-  } catch(e) { clearTimeout(t); throw e; }
+  } catch (e) { clearTimeout(t); throw e; }
 }
 
-async function loadFromOneDrive() {
-  const btn = document.getElementById('gdrive-btn');
-  const lbl = document.getElementById('gdrive-label');
-  const dbg = document.getElementById('dbg');
-  btn.classList.add('loading');
-  lbl.textContent = 'Scaricando…';
-  dbg.style.display = 'none';
-
-  // Try OneDrive first, then GitHub fallback
-  const sources = [
-    { url: DROPBOX_URL, name: 'Dropbox' },
-    { url: GITHUB_URL,   name: 'GitHub'   },
-  ];
-
-  for (const src of sources) {
-    try {
-      lbl.textContent = `Da ${src.name}…`;
-      console.log('Trying:', src.name, src.url);
-      const res = await fetchWithTimeout(src.url, 15000);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength < 5000) throw new Error('File troppo piccolo');
-
-      const wb = XLSX.read(buf, { type:'array', cellDates:true });
-      D = parse(wb);
-      D._sheetNames = wb.SheetNames;
-      D.energia = parseEnergia(wb);
-      extractBudget(wb);
-      D.coint = parseCoint(wb);
-      D.acqCat = parseAcqCategorie(wb);
-      SEL = D.years[D.years.length - 1];
-
-      document.getElementById('upic').textContent = '✅';
-      document.getElementById('uptitle').textContent = 'Piano Risparmi';
-      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
-      document.getElementById('dz').classList.add('ok');
-      document.getElementById('h-sub').textContent = `Dati aggiornati da ${src.name} · Anni: ${D.years.join(', ')}`;
-
-      btn.classList.remove('loading');
-      btn.classList.add('ok');
-      lbl.textContent = `✅ ${src.name}`;
-      setTimeout(() => { lbl.textContent = 'Aggiorna'; btn.classList.remove('ok'); }, 3000);
-
-      render();
-      renderEnergia();
-      renderHome();
-      switchPage('home');
-      return;
-
-    } catch(err) {
-      console.warn(src.name, 'failed:', err.message);
-    }
-  }
-
-  // All failed
-  btn.classList.remove('loading');
-  lbl.textContent = 'Aggiorna';
-  dbg.style.display = 'block';
-  dbg.textContent = `❌ Caricamento automatico non riuscito.\n\nUsa il pulsante 📂 per caricare il file manualmente.\n\nSe vuoi il caricamento automatico, assicurati che il file OneDrive sia condiviso come "Chiunque abbia il link".`;
-}
-
-// Auto-load on page open
-window.addEventListener('load', () => setTimeout(loadFromOneDrive, 600));
-
-
-
-// Multiple download strategies — tries each until one works
-function getDriveURLs() {
-  const id = DRIVE_FILE_ID;
-  const direct = `https://drive.google.com/uc?export=download&id=${id}&confirm=t`;
-  return [
-    // Strategy 1: corsproxy.io
-    `https://corsproxy.io/?${encodeURIComponent(direct)}`,
-    // Strategy 2: allorigins
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(direct)}`,
-    // Strategy 3: cors.sh
-    `https://cors.sh/${direct}`,
-    // Strategy 4: thingproxy
-    `https://thingproxy.freeboard.io/fetch/${direct}`,
-  ];
-}
-
-async function fetchWithTimeout(url, timeoutMs = 12000) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+async function fetchMeta() {
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(timer);
-    return res;
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
+    const r = await fetchWithTimeout('meta.json?v=' + Date.now(), 8000);
+    return r.ok ? await r.json() : null;
+  } catch (e) { return null; }
 }
 
-async function loadFromDrive() {
+const AUTO_SOURCES = [
+  { url: 'dati.enc',  enc: true  },   // cifrato (consigliato)
+  { url: 'dati.xlsx', enc: false },   // compatibilità con la vecchia configurazione
+];
+
+async function loadAuto() {
   const btn = document.getElementById('gdrive-btn');
   const lbl = document.getElementById('gdrive-label');
   const dbg = document.getElementById('dbg');
   btn.classList.add('loading');
-  lbl.textContent = 'Scaricando…';
+  lbl.textContent = 'Scarico…';
   dbg.style.display = 'none';
+  let lastErr = null;
 
-  const urls = getDriveURLs();
-  let lastError = null;
-
-  for (let i = 0; i < urls.length; i++) {
-    lbl.textContent = `Tentativo ${i+1}/${urls.length}…`;
+  for (const src of AUTO_SOURCES) {
     try {
-      console.log(`Trying proxy ${i+1}:`, urls[i]);
-      const res = await fetchWithTimeout(urls[i], 15000);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = await res.arrayBuffer();
-      if (buf.byteLength < 1000) throw new Error('File troppo piccolo, risposta non valida');
-
-      // Success — parse and render
-      const wb = XLSX.read(buf, { type:'array', cellDates:true });
-      D = parse(wb);
-      D._sheetNames = wb.SheetNames;
-      D.energia = parseEnergia(wb);
-      extractBudget(wb);
-      D.coint = parseCoint(wb);
-      D.acqCat = parseAcqCategorie(wb);
-      SEL = D.years[D.years.length - 1];
-
-      document.getElementById('upic').textContent = '✅';
-      document.getElementById('uptitle').textContent = 'Piano Risparmi.xlsm';
-      document.getElementById('upsub').textContent = `${D.years.length} anni · ${D.monthly.length} mesi`;
-      document.getElementById('dz').classList.add('ok');
-      document.getElementById('h-sub').textContent = `Dati caricati da Google Drive · Anni: ${D.years.join(', ')}`;
-
+      const res = await fetchWithTimeout(`${src.url}?v=${Date.now()}`);
+      if (!res.ok) throw new Error(`${src.url}: HTTP ${res.status}`);
+      let buf = await res.arrayBuffer();
+      if (src.enc) { lbl.textContent = 'Sblocco…'; buf = await decryptWithPrompt(buf); }
+      if (buf.byteLength < 5000) throw new Error('File troppo piccolo');
+      const wb = XLSX.read(buf, { type: 'array', cellDates: true });
+      const meta = await fetchMeta();
+      processWorkbook(wb, 'Piano Risparmi', { sync: meta && meta.sync });
       btn.classList.remove('loading');
       btn.classList.add('ok');
       lbl.textContent = '✅ Aggiornato';
-      setTimeout(() => { lbl.textContent = 'Aggiorna da Drive'; btn.classList.remove('ok'); }, 3000);
-
-      render();
-      renderEnergia();
-      return; // Done!
-
-    } catch(err) {
-      console.warn(`Proxy ${i+1} failed:`, err.message);
-      lastError = err;
+      setTimeout(() => { lbl.textContent = 'Aggiorna dati'; btn.classList.remove('ok'); }, 3000);
+      return;
+    } catch (err) {
+      if (err.name === 'UserCancelled') { lastErr = err; break; }
+      console.warn('Sorgente fallita:', src.url, err.message);
+      lastErr = err;
     }
   }
 
-  // All proxies failed
   btn.classList.remove('loading');
-  lbl.textContent = 'Aggiorna da Drive';
+  lbl.textContent = 'Aggiorna dati';
   dbg.style.display = 'block';
-  dbg.textContent = `❌ Impossibile caricare da Google Drive automaticamente.\n\nErrore: ${lastError?.message}\n\n⚠️ Verifica che il file sia condiviso pubblicamente:\nGoogle Drive → tasto destro → Condividi → "Chiunque abbia il link" → Visualizzatore\n\nAlternativa: usa il pulsante 📂 per caricare il file manualmente.`;
+  dbg.textContent = `❌ Caricamento automatico non riuscito${lastErr ? ' (' + lastErr.message + ')' : ''}.\n\n` +
+    `Puoi caricare il file Excel a mano con il pulsante 📂, oppure riprovare con «Aggiorna dati».`;
 }
 
-// Auto-load on page open
-window.addEventListener('load', () => setTimeout(loadFromDrive, 800));
+window.addEventListener('load', () => setTimeout(loadAuto, 400));
 
 
 //  Structure verified against the actual file:
@@ -1131,6 +1261,7 @@ function parse(wb) {
       const b = toS((raw[r] || [])[1]).toLowerCase();
       if (b.includes(kw)) return r;
     }
+    INTEG.missing.add(keyword);
     return -1;
   }
 
@@ -1190,12 +1321,15 @@ function parse(wb) {
 
     const toNv = v => (v===null||v===undefined||v==='')?0:(typeof v==='number'?v:parseFloat(v)||0);
 
-    function findVRow(kw) {
-      const k = kw.toLowerCase();
-      for (let r = 1; r < rawV.length; r++) {
-        const lbl = String((rawV[r]||[])[0]||'').toLowerCase();
-        if (lbl.includes(k)) return r;
+    function findVRow(...kws) {
+      for (const kw of kws) {
+        const k = kw.toLowerCase();
+        for (let r = 1; r < rawV.length; r++) {
+          const lbl = String((rawV[r]||[])[0]||'').toLowerCase();
+          if (lbl.includes(k)) return r;
+        }
       }
+      INTEG.missing.add('Valutazione: ' + kws[0]);
       return -1;
     }
 
@@ -1207,14 +1341,14 @@ function parse(wb) {
 
     val = {
       years: vYears,
-      costoMob:        getV(findVRow("costo mobilita")),
+      costoMob:        getV(findVRow('costo auto', 'costo mobilita')),
       costoCasa:       getV(findVRow('costo casa')),
       costoSoprav:     getV(findVRow('sopravvivenza')),
       costoAbb:        getV(findVRow('abbonamenti')),
       costoSvaghi:     getV(findVRow('svaghi')),
       costoVacanze:    getV(findVRow('vacanze')),
       costoSfizi:      getV(findVRow('sfizi')),
-      movimentiConto:  getV(findVRow('movimenti conto')),
+      movimentiConto:  getV(findVRow('prelievi', 'movimenti conto')),
       tasse:           getV(findVRow('tasse')),
       gestioneConto:   getV(findVRow('gestione conto')),
       rateGeneriche:   getV(findVRow('rate generiche')),
@@ -1315,6 +1449,7 @@ function parse(wb) {
   // Row 32 Excel = XLSX.js idx 31 (min_row=1, so idx = Excel_row - 1)
   // Label: VARIAZIONE ANNUA — monthly cols contain the running conto balance
   const saldoRowIdx = 31;
+  expectLabel(raw, saldoRowIdx, ['saldo conto', 'variazione annua'], 'BILANCIO', saldoRowIdx + 1);
   dbg.push(`Saldo row idx: ${saldoRowIdx} (row 32 Excel = SALDO CONTO)`);
 
   // Build a saldo lookup map: "year-month" -> saldo
@@ -2400,14 +2535,14 @@ function buildKPIVal() {
 
   // Top 3 categorie per importo
   const allCats = [
-    ['Mobilità',        V.costoMob[vi]],
+    ['Auto',            V.costoMob[vi]],
     ['Casa',            V.costoCasa[vi]],
     ['Sopravvivenza',   V.costoSoprav[vi]],
     ['Abbonamenti',     V.costoAbb[vi]],
     ['Svaghi',          V.costoSvaghi[vi]],
     ['Vacanze',         V.costoVacanze[vi]],
     ['Sfizi',           V.costoSfizi[vi]],
-    ['Movimenti Conto', V.movimentiConto[vi]],
+    ['Prelievi',        V.movimentiConto[vi]],
     ['Tasse',           V.tasse[vi]],
     ['Rate Gen.',       V.rateGeneriche[vi]],
   ].filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
@@ -2449,13 +2584,13 @@ function buildChartCategorie() {
   // alternates between warm/cool, light/dark, saturated/muted
   const CATS = [
     { lbl:'Casa',            data:V.costoCasa,        col:'#3B82F6' },
-    { lbl:'Mobilità',        data:V.costoMob,         col:'#22C55E' },
+    { lbl:'Auto',            data:V.costoMob,         col:'#22C55E' },
     { lbl:'Sopravvivenza',   data:V.costoSoprav,      col:'#F97316' },
     { lbl:'Svaghi',          data:V.costoSvaghi,      col:'#EC4899' },
     { lbl:'Sfizi',           data:V.costoSfizi,       col:'#EAB308' },
     { lbl:'Vacanze',         data:V.costoVacanze,     col:'#06B6D4' },
     { lbl:'Abbonamenti',     data:V.costoAbb,         col:'#EF4444' },
-    { lbl:'Movimenti Conto', data:V.movimentiConto,   col:'#A855F7' },
+    { lbl:'Prelievi',        data:V.movimentiConto,   col:'#A855F7' },
     { lbl:'Tasse',           data:V.tasse,            col:'#84CC16' },
     { lbl:'Gestione Conto',  data:V.gestioneConto,    col:'#F59E0B' },
     { lbl:'Rate Gen.',       data:V.rateGeneriche,    col:'#14B8A6' },
@@ -2464,7 +2599,7 @@ function buildChartCategorie() {
     type: 'bar',
     data: {
       labels: yrs.map(String),
-      datasets: CATS.map(c => ({
+      datasets: CATS.filter(c => c.data.some(v => v)).map(c => ({
         label: c.lbl,
         data: c.data,
         backgroundColor: c.col + 'dd',
@@ -2558,14 +2693,14 @@ function buildValTable() {
   if (!yrs.length) return;
 
   const rows = [
-    ['🚗 Costo Mobilità',        V.costoMob,        ''],
+    ['🚗 Costo Auto',            V.costoMob,        ''],
     ['🏠 Costo Casa',            V.costoCasa,       ''],
     ['🛒 Costo Sopravvivenza',   V.costoSoprav,     ''],
     ['📱 Costo Abbonamenti',     V.costoAbb,        ''],
     ['🎭 Svaghi (Cinema/Bar/Ristorante)', V.costoSvaghi, ''],
     ['🌴 Costo Vacanze',         V.costoVacanze,    ''],
     ['✨ Costo Sfizi',           V.costoSfizi,      ''],
-    ['💸 Movimenti Conto',       V.movimentiConto,  ''],
+    ['💸 Prelievi',              V.movimentiConto,  ''],
     ['🏛️ Tasse',                 V.tasse,           ''],
     ['🏦 Gestione Conto',        V.gestioneConto,   ''],
     ['📋 Rate Generiche',        V.rateGeneriche,   ''],
@@ -2584,6 +2719,7 @@ function buildValTable() {
 
   let h = `<thead><tr><th>Categoria</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
   rows.forEach(([lbl, arr, cls, fmt]) => {
+    if (arr !== null && lbl.indexOf('Gestione Conto') >= 0 && !arr.some(v => v)) return;
     if (arr === null) { h += `<tr><td colspan="${yrs.length+1}" style="padding:4px 16px;border:none"><hr style="border-color:var(--border)"></td></tr>`; return; }
     h += `<tr class="${cls}"><td>${lbl}</td>`;
     yrs.forEach(yr => {
@@ -2652,14 +2788,15 @@ function buildChartProj() {
 //  PAGE SWITCHING
 // ══════════════════════════════════════════════════════
 function switchPage(page) {
-  ['home','bilancio','energia','coint'].forEach(p => {
+  CUR_PAGE = page;
+  ['home','bilancio','energia','coint','sim'].forEach(p => {
     document.getElementById('page-'+p).classList.toggle('hidden', page !== p);
     document.getElementById('tab-'+p).classList.toggle('active', page === p);
   });
   if (page === 'home' && D) renderHome();
   if (page === 'coint' && D) renderCoint();
-  if (page === 'home' && D) renderHome();
   if (page === 'energia') renderEnergia();
+  if (page === 'sim') renderSim();
 }
 
 // ══════════════════════════════════════════════════════
@@ -2702,6 +2839,9 @@ function parseEnergia(wb) {
   const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header:1, defval:null, raw:true });
   log('Rows:', raw.length);
   if (raw.length < 15) { log('❌ Too few rows'); showDbg(); return null; }
+  [[5,'spese materia'],[15,'totale'],[25,'bolletta'],[32,'costo mensile'],[39,'rapporto'],
+   [49,'spese materia'],[58,'totale'],[69,'totale kw'],[70,'bolletta'],[73,'costo mensile'],[79,'rapporto']]
+    .forEach(([i, kw]) => expectLabel(raw, i, kw, 'ANALISI CONSUMI GAS ENERGIA', i + 2));
 
   // 3. Helpers
   const N = v => { if(v==null||v==='') return null; if(typeof v==='number') return v; if(v instanceof Date) return null; const p=parseFloat(v); return isNaN(p)?null:p; };
@@ -3232,36 +3372,6 @@ function parseCoint(wb) {
     catTotals[cat] = sortedYears.map(y => byYearCat[y]?.[cat] || 0);
   });
 
-  // ── Amortization schedule from Gestione finanziamenti ──
-  // Excel H28:H267 = mutuo residuo, I28:I267 = assic residuo
-  // min_row=2 → XLSX.js idx = Excel_row - 2
-  // Excel row 28 = XLSX.js idx 26
-  const amortSheet = wb.SheetNames.find(n => n === 'Gestione finanziamenti');
-  const amortData = [];
-  if (amortSheet) {
-    const ws2 = wb.Sheets[amortSheet];
-    // Read directly from cell references to avoid any indexing issues
-    for (let excelRow = 28; excelRow <= 267; excelRow++) {
-      const hCell = ws2[`H${excelRow}`];
-      const iCell = ws2[`I${excelRow}`];
-      const mutuo = hCell ? (typeof hCell.v === 'number' ? hCell.v : parseFloat(hCell.v)) : null;
-      const assic = iCell ? (typeof iCell.v === 'number' ? iCell.v : parseFloat(iCell.v)) : null;
-      if ((mutuo === null || isNaN(mutuo)) && (assic === null || isNaN(assic))) continue;
-      // Generate date from sequence: row 28 = Nov 2020, row 29 = Dec 2020, etc.
-      const monthOffset = excelRow - 28; // 0 = Nov 2020
-      const baseYear = 2020, baseMonth = 10; // Nov = month index 10 (0-based)
-      const totalMonths = baseMonth + monthOffset;
-      const year = baseYear + Math.floor(totalMonths / 12);
-      const month = totalMonths % 12;
-      amortData.push({
-        date:  new Date(year, month, 1),
-        mutuo: (!isNaN(mutuo) && mutuo > 0.01) ? mutuo : null,
-        assic: (!isNaN(assic) && assic > 0.01) ? assic : null,
-      });
-    }
-    console.log('amortData:', amortData.length, 'first:', amortData[0]?.mutuo, amortData[0]?.assic);
-  }
-
   // ── Cumulative balance ──
   // ── Saldo mensile da "Analisi Spese Cointestato" ──
   // Row 7 (idx 6) = date headers as text "N MESE YYYY"
@@ -3272,6 +3382,8 @@ function parseCoint(wb) {
   const saldoMensile = {}; // key="anno-mese", val=netto
   if (analisiSheet) {
     const ar = XLSX.utils.sheet_to_json(wb.Sheets[analisiSheet], {header:1, defval:null, raw:true});
+    expectLabel(ar, 6, 'etichette', 'Analisi Spese Cointestato', 7);
+    expectLabel(ar, 26, 'totale complessivo', 'Analisi Spese Cointestato', 27);
     const dateRow  = ar[6] || [];   // row 7
     const totRow   = ar[26] || [];  // row 27
     for (let c = 1; c < dateRow.length; c++) {
@@ -3308,7 +3420,7 @@ function parseCoint(wb) {
     cumulativeData.push(entry);
   }
 
-  return { sortedYears, allCats, annSpese, annVersamenti, annMargine, catTotals, byYearCat, monthly, amortData, cumulativeData };
+  return { sortedYears, allCats, annSpese, annVersamenti, annMargine, catTotals, byYearCat, monthly, cumulativeData };
 }
 
 // ══════════════════════════════════════════════════════
@@ -3616,40 +3728,22 @@ function buildTableSaldo() {
 }
 
 function buildKPIMutuo() {
-  const C = D.coint;
-  if (!C.amortData?.length) return;
-
-  const now = new Date();
-  // Current entries: last entry with date <= today
-  const current = [...C.amortData].reverse().find(d => d.date <= now);
-  const residuoMutuo = current?.mutuo ?? 0;
-  const residuoAssic = current?.assic ?? 0;
-
-  const totaleMutuo = 150500.93;
-  const totaleAssic = 5340;
-  const pagatoMutuo = totaleMutuo - residuoMutuo;
-  const pctMutuo = (pagatoMutuo / totaleMutuo * 100).toFixed(1);
-
-  // End dates
-  const endMutuo = C.amortData.filter(d => d.mutuo !== null && d.mutuo > 1).slice(-1)[0]?.date;
-  const endAssic = C.amortData.filter(d => d.assic !== null && d.assic > 1).slice(-1)[0]?.date;
-  const fmtDate = d => d ? d.toLocaleDateString('it-IT',{month:'long',year:'numeric'}) : '—';
-
-  const rateRimMutuo = C.amortData.filter(d => d.date > now && d.mutuo !== null && d.mutuo > 1).length;
-  const rateRimAssic = C.amortData.filter(d => d.date > now && d.assic !== null && d.assic > 1).length;
-
+  const M = D.mutuo;
+  const el = document.getElementById('kpis-mutuo');
+  if (!M || !M.amortData.length) { el.innerHTML = ''; return; }
+  const fmtDate = d => d ? d.toLocaleDateString('it-IT', { month:'long', year:'numeric' }) : '—';
+  const yrs = (M.nPay / 12).toFixed(1).replace('.', ',');
   const cards = [
-    { lbl:'🏠 Debito Mutuo Residuo',  val: euro(residuoMutuo), cls:'ora', c:'c2',
-      sub: `${pctMutuo}% estinto · ${rateRimMutuo} rate rimanenti` },
-    { lbl:'✅ Quota Mutuo Pagata',     val: euro(pagatoMutuo), cls:'pos', c:'c1',
-      sub: `Su ${euro(totaleMutuo)} totali` },
-    { lbl:'📅 Fine Mutuo',            val: fmtDate(endMutuo), cls:'neu', c:'c3',
-      sub: `${(rateRimMutuo/12).toFixed(1)} anni rimanenti` },
-    { lbl:'🛡️ Debito Assic. Residuo', val: euro(residuoAssic), cls:'blu', c:'c0',
-      sub: `Fine: ${fmtDate(endAssic)} · ${rateRimAssic} rate rimanenti` },
+    { lbl:'🏦 Capitale residuo (stima)', val: M.capRes != null ? euro(M.capRes) : '—', cls:'ora', c:'c2',
+      sub: M.tan != null ? `Calcolato sul tasso implicito del piano (${M.tan.toFixed(2).replace('.', ',')}%)` : 'Dati del piano non sufficienti' },
+    { lbl:'💸 Interessi residui (stima)', val: M.intRes != null ? euro(M.intRes) : '—', cls:'neg', c:'c1',
+      sub: M.intRes != null && M.residuo > 0 ? `${(M.intRes / M.residuo * 100).toFixed(1).replace('.', ',')}% delle rate ancora da pagare` : '' },
+    { lbl:'🧾 Rate ancora da pagare', val: euro(M.residuo), cls:'neu', c:'c3',
+      sub: `${M.nPay} rate da ${euro(M.rata)} · capitale + interessi` },
+    { lbl:'📅 Fine mutuo', val: fmtDate(M.fine), cls:'blu', c:'c0',
+      sub: `${yrs} anni rimanenti · Assicurazione personale: ${euro(M.residuoA)} fino a ${fmtDate(M.fineA)}` },
   ];
-
-  document.getElementById('kpis-mutuo').innerHTML = cards.map(k => `
+  el.innerHTML = cards.map(k => `
     <div class="kpi ${k.c}">
       <div class="kpi-lbl">${k.lbl}</div>
       <div class="kpi-val ${k.cls}" style="font-size:20px">${k.val}</div>
@@ -3659,12 +3753,15 @@ function buildKPIMutuo() {
 
 function buildChartMutuo() {
   if (CH_COINT.mutuo) { CH_COINT.mutuo.destroy(); delete CH_COINT.mutuo; }
-  const C = D.coint;
-  if (!C.amortData?.length) return;
+  const C = D.mutuo;
+  if (!C?.amortData?.length) return;
+  const tEl = document.getElementById('mutuo-chart-title');
+  if (tEl) tEl.textContent = 'Proiezione Mutuo — rate residue da pagare' +
+    (C.fine ? ' fino a ' + C.fine.toLocaleDateString('it-IT', { month:'long', year:'numeric' }) : '');
   const isMobile = window.innerWidth <= 480;
 
   const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
-  const baseYear = 2020, baseMonth = 10; // Nov 2020
+  const baseYear = C.amortData[0].date.getFullYear(), baseMonth = C.amortData[0].date.getMonth();
 
   // Every 3 months for readability
   const step = 3;
@@ -3981,6 +4078,267 @@ function buildHomeKPIs() {
   `;
 }
 
+
+// ══════════════════════════════════════════════════════
+//  MUTUO — calcoli finanziari e lettura del piano
+// ══════════════════════════════════════════════════════
+// Valore attuale di n rate costanti R al tasso annuo tanPct
+function pvFor(R, tanPct, n) {
+  const t = tanPct / 100 / 12;
+  return t === 0 ? R * n : R * (1 - Math.pow(1 + t, -n)) / t;
+}
+// Rata costante per estinguere P in n mesi
+function pmtFor(P, tanPct, n) {
+  if (n <= 0) return 0;
+  const t = tanPct / 100 / 12;
+  return t === 0 ? P / n : P * t / (1 - Math.pow(1 + t, -n));
+}
+// TAN annuo (%) implicito: quello per cui il valore attuale di n rate R è P
+function solveTan(P, R, n) {
+  if (!(P > 0 && R > 0 && n > 0) || R * n <= P) return 0;
+  let lo = 0, hi = 0.05;
+  for (let i = 0; i < 200; i++) {
+    const mid = (lo + hi) / 2;
+    if (pvFor(R, mid * 12 * 100, n) > P) lo = mid; else hi = mid;
+  }
+  return ((lo + hi) / 2) * 12 * 100;
+}
+// Simulazione mese per mese: rata costante, ultima rata ridotta
+function simAmort(P, tanPct, R) {
+  const t = tanPct / 100 / 12;
+  if (P <= 0.005) return { ok: true, months: 0, paid: 0, interest: 0 };
+  if (!(R > 0) || (t > 0 && R <= P * t * 1.000001)) return { ok: false };
+  let bal = P, m = 0, paid = 0, intr = 0;
+  const tol = Math.max(1, R * 0.002);   // un residuo di pochi euro (arrotondamenti) va nell'ultima rata
+  while (bal > 0.005 && m < 1200) {
+    const i = bal * t, due = bal + i, pay = Math.min(R, due);
+    bal = due - pay; paid += pay; intr += i; m++;
+    if (bal > 0 && bal <= tol) { paid += bal; bal = 0; }
+  }
+  return { ok: bal <= 0.005, months: m, paid, interest: intr };
+}
+// Anno/mese di una data Excel, robusto a piccoli sfasamenti di fuso orario
+function ymOf(v) {
+  if (Object.prototype.toString.call(v) === '[object Date]' && !isNaN(v)) { const d = new Date(v.getTime() + 12 * 3600e3); return { y: d.getFullYear(), m: d.getMonth() }; }
+  if (typeof v === 'number' && v > 20000) { const d = new Date(Math.round((v - 25569) * 86400000) + 12 * 3600e3); return { y: d.getUTCFullYear(), m: d.getUTCMonth() }; }
+  return null;
+}
+
+// Legge il foglio «Gestione finanziamenti»: parametri (colonna G, righe 1-40) e piano (da «DATA»)
+function parseMutuo(wb) {
+  const name = wb.SheetNames.find(n => n.trim().toLowerCase() === 'gestione finanziamenti');
+  if (!name) return null;
+  const ws = wb.Sheets[name];
+  const cv = a => (ws[a] ? ws[a].v : null);
+  const num = a => { const v = cv(a); if (typeof v === 'number') return v; const p = parseFloat(v); return isNaN(p) ? null : p; };
+  const rowOf = pred => {
+    for (let r = 1; r <= 40; r++) { const v = cv('G' + r); if (typeof v === 'string' && pred(v.trim().toLowerCase())) return r; }
+    return -1;
+  };
+  const need = (label, pred) => {
+    const r = rowOf(pred);
+    if (r < 0) integWarn(`Gestione finanziamenti: riga «${label}» non trovata nella colonna G.`);
+    return r;
+  };
+  const rRata = need('RATA', s => s === 'rata');
+  const rRich = need('importo richiesto', s => s.startsWith('importo richiesto'));
+  const rTot  = need('TOTALE DOVUTO', s => s.startsWith('totale dovuto'));
+
+  let rHead = -1;
+  for (let r = 1; r <= 60; r++) {
+    if (String(cv('G' + r) || '').trim().toLowerCase() === 'data' && String(cv('H' + r) || '').toLowerCase().includes('importo')) { rHead = r; break; }
+  }
+  if (rHead < 0) { integWarn('Gestione finanziamenti: intestazione del piano (DATA / Importo rimanente) non trovata.'); return null; }
+
+  let ym0 = ymOf(ws['G' + (rHead + 1)] && ws['G' + (rHead + 1)].v);
+  if (!ym0) { integWarn('Gestione finanziamenti: data della prima rata non leggibile, ipotizzo novembre 2020.'); ym0 = { y: 2020, m: 10 }; }
+
+  const amortData = [];
+  let empty = 0;
+  for (let r = rHead + 1; r < rHead + 700 && empty < 4; r++) {
+    const h = num('H' + r), i = num('I' + r);
+    if (h === null && i === null) { empty++; continue; }
+    empty = 0;
+    const tot = ym0.m + (r - (rHead + 1));
+    amortData.push({
+      date: new Date(ym0.y + Math.floor(tot / 12), tot % 12, 1),
+      mutuo: h !== null && h > 0.01 ? h : null,
+      assic: i !== null && i > 0.01 ? i : null,
+    });
+  }
+  if (!amortData.length) { integWarn('Gestione finanziamenti: piano di ammortamento vuoto.'); return null; }
+
+  const rata = rRata > 0 ? num('H' + rRata) : null;
+  const rataA = rRata > 0 ? num('I' + rRata) : null;
+  const richiesto = rRich > 0 ? num('H' + rRich) : null;
+  const totale = rTot > 0 ? num('H' + rTot) : null;
+
+  const now = new Date(), nowYM = now.getFullYear() * 12 + now.getMonth();
+  let curIdx = 0;
+  amortData.forEach((d, i) => { if (d.date.getFullYear() * 12 + d.date.getMonth() <= nowYM) curIdx = i; });
+  const cur = amortData[curIdx];
+
+  const residuo = cur.mutuo || 0;
+  const nPay = rata > 0 ? Math.round(residuo / rata) : 0;
+  const nTotPay = rata > 0 && totale ? Math.round(totale / rata) : null;
+  const tan = richiesto && rata && nTotPay ? solveTan(richiesto, rata, nTotPay) : null;
+  const capRes = tan !== null ? pvFor(rata, tan, nPay) : null;
+  const lastWith = key => { const a = amortData.filter(d => d[key] !== null && d[key] > 1); return a.length ? a[a.length - 1].date : null; };
+
+  return {
+    amortData, rata, rataA, richiesto, totale, nTotPay, tan,
+    residuo, nPay, capRes, intRes: capRes !== null ? residuo - capRes : null,
+    residuoA: cur.assic || 0, fine: lastWith('mutuo'), fineA: lastWith('assic'),
+  };
+}
+
+// ══════════════════════════════════════════════════════
+//  SIMULATORE MUTUO
+// ══════════════════════════════════════════════════════
+const SIM_KEY = 'sim-v1';
+let SIM_READY = false, SIM_FOR = null, SIM_MODE = 'rata';
+const byId = id => document.getElementById(id);
+
+function parseNum(s) {
+  s = String(s == null ? '' : s).trim().replace(/[\s€%]/g, '');
+  if (!s) return NaN;
+  if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  return parseFloat(s);
+}
+function fmtIn(v, dec = 2) { return (Math.round(v * Math.pow(10, dec)) / Math.pow(10, dec)).toString().replace('.', ','); }
+function fmtMonths(m) {
+  const y = Math.floor(m / 12), r = m % 12;
+  if (y === 0) return `${r} mes${r === 1 ? 'e' : 'i'}`;
+  return `${y} ann${y === 1 ? 'o' : 'i'}` + (r ? ` e ${r} mes${r === 1 ? 'e' : 'i'}` : '');
+}
+function loadSim() { try { return JSON.parse(localStorage.getItem(SIM_KEY) || '{}'); } catch (e) { return {}; } }
+function saveSim(o) { try { localStorage.setItem(SIM_KEY, JSON.stringify(o)); } catch (e) {} }
+
+function setSimMode(mode) {
+  SIM_MODE = mode;
+  byId('sim-m-rata').classList.toggle('on', mode === 'rata');
+  byId('sim-m-dur').classList.toggle('on', mode === 'durata');
+  byId('sim-f-rata').classList.toggle('hidden', mode !== 'rata');
+  byId('sim-f-dur').classList.toggle('hidden', mode !== 'durata');
+}
+
+function initSim() {
+  if (SIM_READY) return;
+  SIM_READY = true;
+  ['sim-cap','sim-vers','sim-tan','sim-rata','sim-anni','sim-tan0','sim-rata0','sim-n0']
+    .forEach(id => byId(id).addEventListener('input', recalcSim));
+  byId('sim-m-rata').addEventListener('click', () => { setSimMode('rata'); recalcSim(); });
+  byId('sim-m-dur').addEventListener('click', () => { setSimMode('durata'); recalcSim(); });
+}
+
+function renderSim() {
+  const empty = byId('empty-sim'), dash = byId('dash-sim');
+  if (!empty || !dash) return;
+  if (!D) { empty.classList.remove('hidden'); dash.classList.add('hidden'); return; }
+  empty.classList.add('hidden'); dash.classList.remove('hidden');
+  initSim();
+  if (SIM_FOR !== D) {            // nuovi dati: ricarico i valori di partenza dal piano
+    SIM_FOR = D;
+    const M = D.mutuo, s = loadSim();
+    byId('sim-cap').value  = M && M.capRes != null ? fmtIn(M.capRes) : '';
+    byId('sim-tan0').value = M && M.tan != null ? fmtIn(M.tan, 4) : '1,6';
+    byId('sim-rata0').value = M && M.rata ? fmtIn(M.rata, 3) : '';
+    byId('sim-n0').value   = M ? String(M.nPay) : '';
+    byId('sim-vers').value = fmtIn(s.vers != null ? s.vers : 35000);
+    byId('sim-tan').value  = fmtIn(s.tan != null ? s.tan : 2.95);
+    byId('sim-rata').value = fmtIn(s.rata != null ? s.rata : 639);
+    byId('sim-anni').value = fmtIn(s.anni != null ? s.anni : 10, 1);
+    setSimMode(s.mode === 'durata' ? 'durata' : 'rata');
+    byId('sim-now').innerHTML = M
+      ? `Situazione attuale (dal file Excel): rata <b>${euro(M.rata)}</b> · <b>${M.nPay}</b> rate residue (${fmtMonths(M.nPay)}) · rate ancora da pagare <b>${euro(M.residuo)}</b>, di cui capitale ~<b>${M.capRes != null ? euro(M.capRes) : '—'}</b> e interessi ~<b>${M.intRes != null ? euro(M.intRes) : '—'}</b>.`
+      : '⚠️ Foglio «Gestione finanziamenti» non letto: inserisci a mano i dati del mutuo.';
+    byId('sim-cap-help').textContent = M
+      ? `Stima: ${M.nPay} rate da ${euro(M.rata)} attualizzate al ${fmtIn(M.tan)}% (tasso implicito nel piano). Se la banca ti indica il capitale residuo esatto, scrivilo qui.`
+      : 'Inserisci il capitale residuo.';
+    byId('sim-dur-help').textContent = M ? `Durata attuale: ${fmtMonths(M.nPay)}` : '';
+  }
+  recalcSim();
+}
+
+function recalcSim() {
+  if (!D || !byId('sim-cap')) return;
+  const g = id => parseNum(byId(id).value);
+  const cap = g('sim-cap'), vers = isNaN(g('sim-vers')) ? 0 : g('sim-vers'), tan = g('sim-tan');
+  const rata = g('sim-rata'), anni = g('sim-anni');
+  const tan0 = g('sim-tan0'), rata0 = g('sim-rata0'), n0 = Math.round(g('sim-n0'));
+  const kp = byId('sim-kpis'), tb = byId('sim-table'), warn = byId('sim-warn'), note = byId('sim-note');
+  warn.innerHTML = ''; kp.innerHTML = ''; tb.innerHTML = '';
+  const fail = msg => { warn.innerHTML = `<div class="sim-warn">${escHtml(msg)}</div>`; note.textContent = ''; };
+
+  if (![cap, tan, tan0, rata0, n0].every(isFinite) || cap <= 0 || n0 <= 0) { fail('Compila capitale residuo, tassi, rata attuale e rate residue (sezione «Situazione attuale»).'); return; }
+
+  saveSim({ vers, tan, rata: isFinite(rata) ? rata : undefined, anni: isFinite(anni) ? anni : undefined, mode: SIM_MODE });
+
+  const base = simAmort(cap, tan0, rata0);
+  if (!base.ok) { fail('Con rata e tasso attuali il debito non si estingue: controlla i valori della situazione attuale.'); return; }
+
+  const P1 = Math.max(cap - vers, 0);
+  let R1, sc;
+  if (P1 <= 0.005) { R1 = 0; sc = { ok: true, months: 0, paid: 0, interest: 0 }; }
+  else if (SIM_MODE === 'rata') {
+    R1 = rata; sc = simAmort(P1, tan, R1);
+    if (!sc.ok) { fail(`La rata è troppo bassa: con questo tasso serve più di ${euro(P1 * tan / 100 / 12)} al mese (solo interessi) per ridurre il debito.`); return; }
+  } else {
+    if (!(anni > 0)) { fail('Indica una durata in anni maggiore di zero.'); return; }
+    R1 = pmtFor(P1, tan, Math.round(anni * 12)); sc = simAmort(P1, tan, R1);
+  }
+
+  // confronti
+  const R2 = pmtFor(cap, tan, n0), s2 = simAmort(cap, tan, R2);                  // nuovo tasso, nessun versamento, stessa durata
+  let R4, s4;                                                                    // nuovo tasso, nessun versamento, stessa rata/durata dello scenario
+  if (SIM_MODE === 'rata') { R4 = rata; s4 = simAmort(cap, tan, R4); }
+  else { R4 = pmtFor(cap, tan, Math.round(anni * 12)); s4 = simAmort(cap, tan, R4); }
+
+  const dInt = sc.interest - base.interest, dMon = base.months - sc.months;
+  const sgnE = v => (v > 0 ? '+' : v < 0 ? '−' : '') + euro(Math.abs(v));
+  const cards = [
+    { lbl: '💶 Rata mensile', val: P1 <= 0.005 ? '—' : euro(R1), cls: 'blu', c: 'c0',
+      sub: `Attuale: ${euro(rata0)}` + (P1 > 0.005 ? ` (${sgnE(R1 - rata0)})` : '') },
+    { lbl: '⏱️ Durata residua', val: fmtMonths(sc.months), cls: 'neu', c: 'c3',
+      sub: `${sc.months} rate · attuale ${base.months} (${fmtMonths(base.months)})` },
+    { lbl: '💸 Interessi residui', val: euro(sc.interest), cls: 'ora', c: 'c2',
+      sub: `Attuale: ${euro(base.interest)}` },
+    { lbl: '🧾 Totale ancora da pagare', val: euro(sc.paid), cls: 'neu', c: 'c4',
+      sub: `Capitale ${euro(P1)} + interessi` },
+    { lbl: dInt <= 0 ? '✅ Interessi risparmiati' : '⚠️ Interessi in più', val: euro(Math.abs(dInt)), cls: dInt <= 0 ? 'pos' : 'neg', c: 'c1',
+      sub: 'rispetto alla situazione attuale' },
+    { lbl: dMon >= 0 ? '🏁 Mutuo estinto prima di' : '🐢 Mutuo estinto dopo di', val: dMon === 0 ? 'uguale' : fmtMonths(Math.abs(dMon)), cls: dMon >= 0 ? 'pos' : 'neg', c: 'c0',
+      sub: 'rispetto alla durata attuale' },
+  ];
+  kp.innerHTML = cards.map(k => `
+    <div class="kpi ${k.c}">
+      <div class="kpi-lbl">${k.lbl}</div>
+      <div class="kpi-val ${k.cls}" style="font-size:22px">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+
+  const rows = [
+    { n: 'Situazione attuale', cap, tan: tan0, R: rata0, s: base },
+    { n: 'Nuovo tasso, nessun versamento (stessa durata)', cap, tan, R: R2, s: s2 },
+    { n: `Nuovo tasso, nessun versamento (${SIM_MODE === 'rata' ? 'stessa rata dello scenario' : 'stessa durata dello scenario'})`, cap, tan, R: R4, s: s4 },
+    { n: '▶ Scenario simulato', cap: P1, tan, R: R1, s: sc, hi: true },
+  ];
+  const td = 'style="text-align:right"';
+  tb.innerHTML = `<thead><tr><th>Scenario</th><th ${td}>Capitale</th><th ${td}>Tasso</th><th ${td}>Rata</th><th ${td}>Durata</th><th ${td}>Interessi</th><th ${td}>Totale</th><th ${td}>Interessi vs attuale</th></tr></thead><tbody>` +
+    rows.map(r => {
+      if (!r.s.ok) return `<tr><td>${escHtml(r.n)}</td><td colspan="7" style="color:var(--red)">rata troppo bassa: il debito non si estingue</td></tr>`;
+      const d = r.s.interest - base.interest;
+      return `<tr${r.hi ? ' style="background:rgba(88,166,255,.08);font-weight:600"' : ''}>
+        <td>${escHtml(r.n)}</td><td ${td}>${euro(r.cap)}</td><td ${td}>${fmtIn(r.tan)}%</td><td ${td}>${euro(r.R)}</td>
+        <td ${td}>${fmtMonths(r.s.months)}</td><td ${td}>${euro(r.s.interest)}</td><td ${td}>${euro(r.s.paid)}</td>
+        <td ${td} class="${r === rows[0] ? '' : d <= 0 ? 'vp' : 'vn'}">${r === rows[0] ? '—' : sgnE(d)}</td></tr>`;
+    }).join('') + '</tbody>';
+
+  note.innerHTML = 'Calcolo con ammortamento alla francese (rata costante, interessi mensili = tasso annuo / 12). ' +
+    'Il piano reale della banca può differire di qualche euro per spese di incasso, assicurazione, arrotondamenti e data di decorrenza. ' +
+    'Per decisioni importanti conferma i numeri con il piano di ammortamento aggiornato della banca.';
+}
 
 (function initPWA() {
   // ── 1. Generate app icon as a canvas-drawn PNG (no external assets needed) ──
