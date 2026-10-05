@@ -1,0 +1,96 @@
+name: Aggiorna dashboard
+
+# Ogni mattina (e a richiesta, e quando cambi index.html):
+#  1. scarica l'Excel da Dropbox (link nel secret DROPBOX_URL)
+#  2. lo CIFRA con la password nel secret DATA_PASSWORD
+#  3. pubblica sito + dati cifrati su GitHub Pages
+# L'Excel in chiaro non viene mai salvato nel repository né pubblicato.
+
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - '.github/workflows/deploy.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scarica il file Excel da Dropbox
+        env:
+          DROPBOX_URL: ${{ secrets.DROPBOX_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DROPBOX_URL:-}" ]; then
+            echo "::error::Manca il secret DROPBOX_URL"; exit 1
+          fi
+          # il link deve scaricare il file (dl=1): se hai incollato dl=0 lo correggo io
+          URL="${DROPBOX_URL/dl=0/dl=1}"
+          curl -fL --retry 3 --retry-delay 5 --max-time 90 -o dati.xlsx "$URL"
+          SIZE=$(wc -c < dati.xlsx)
+          # un file .xlsx è uno zip: deve iniziare con "PK"
+          if [ "$(head -c 2 dati.xlsx)" != "PK" ] || [ "$SIZE" -lt 5000 ]; then
+            echo "::error::Il file scaricato non è un Excel valido (${SIZE} byte). Controlla il link Dropbox."
+            exit 1
+          fi
+          echo "Scaricato: ${SIZE} byte"
+
+      - name: Cifra i dati
+        env:
+          DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DATA_PASSWORD:-}" ]; then
+            echo "::error::Manca il secret DATA_PASSWORD"; exit 1
+          fi
+          mkdir -p site
+          # AES-256-GCM, chiave da PBKDF2-SHA256 (200.000 iterazioni); formato: salt(16) | iv(12) | cifrato + tag
+          node - <<'JS'
+          const crypto = require('crypto'), fs = require('fs');
+          const salt = crypto.randomBytes(16), iv = crypto.randomBytes(12);
+          const key = crypto.pbkdf2Sync(process.env.DATA_PASSWORD, salt, 200000, 32, 'sha256');
+          const c = crypto.createCipheriv('aes-256-gcm', key, iv);
+          const data = fs.readFileSync('dati.xlsx');
+          const enc = Buffer.concat([c.update(data), c.final()]);
+          fs.writeFileSync('site/dati.enc', Buffer.concat([salt, iv, enc, c.getAuthTag()]));
+          console.log('Cifrato:', data.length, '->', fs.statSync('site/dati.enc').size, 'byte');
+          JS
+
+      - name: Prepara il sito
+        run: |
+          set -euo pipefail
+          cp index.html site/index.html
+          echo "{\"sync\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > site/meta.json
+          touch site/.nojekyll
+          rm -f dati.xlsx
+          # controllo di sicurezza: nel sito pubblicato non deve esserci nessun Excel in chiaro
+          if ls site | grep -Ei '\.(xlsx|xlsm|xls)$'; then
+            echo "::error::Trovato un Excel in chiaro nella cartella da pubblicare"; exit 1
+          fi
+          test -s site/dati.enc
+          ls -l site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
