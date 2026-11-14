@@ -717,6 +717,12 @@ tr.rH{background:rgba(88,166,255,.03)}
     <div class="cgrid" id="camb-grid"></div>
   </div>
 
+  <div class="sec" id="sec-voci">
+    <div class="sec-hd"><span class="sec-title">Spesa effettiva per voce — conto + carta</span><span class="sec-note" id="voci-note"></span></div>
+    <div class="tcard"><div class="tscroll"><table id="t-voci"></table></div></div>
+    <div class="vnote" id="voci-foot" style="margin-top:10px"></div>
+  </div>
+
   <div class="cgrid" id="sec-fisso-var">
     <div class="cc full">
       <div class="cc-title">Spese fisse, necessarie e discrezionali — media mensile per anno</div>
@@ -1067,6 +1073,7 @@ function processWorkbook(wb, label, extra = {}) {
   D.coint = parseCoint(wb);
   D.mutuo = parseMutuo(wb);
   D.acqCat = parseAcqCategorie(wb);
+  D.tx = parseTx(wb);
   SEL = D.years[D.years.length - 1];
   checkSheets(wb);
   checkMissingRows();
@@ -1626,6 +1633,25 @@ function parse(wb) {
     acqGenerici, totSpesVar,
     monthly, saldoMonthly, cartaMonthly, val,
   };
+}
+
+
+// Movimenti riga per riga: carta (Dettaglio Spese Generiche CC) e conto (Spese Generiche BANCOMAT)
+function parseTx(wb) {
+  const out = [];
+  const src = [['dettaglio spese generiche cc', 'carta'], ['spese generiche bancomat', 'conto']];
+  for (const [nm, tag] of src) {
+    const shName = wb.SheetNames.find(n => n.trim().toLowerCase() === nm);
+    if (!shName) continue;
+    const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header: 1, defval: null, raw: true });
+    for (let r = 1; r < raw.length; r++) {
+      const row = raw[r]; if (!row) continue;
+      const y = +row[2], m = +row[3], amt = typeof row[8] === 'number' ? row[8] : parseFloat(row[8]);
+      if (!y || !m || !amt || isNaN(amt) || row[6] == null) continue;
+      out.push({ y, m, desc: String(row[0] || '').trim(), tip: String(row[6]).trim().toUpperCase(), cat: String(row[7] || '').trim(), amt, note: String(row[11] || '').trim(), src: tag });
+    }
+  }
+  return out;
 }
 
 // ══════════════════════════════════════════════════════
@@ -2832,7 +2858,7 @@ function buildChartProj() {
 const BTABS = [['pan', '📊 Panoramica'], ['spe', '🛒 Spese'], ['car', '💳 Carta'], ['con', '🏦 Conto']];
 const BTAB_MAP = {
   'kpis': 'pan', 'kpis-month': 'pan', 'carta-banner': 'pan', 'sec-ch-month': 'pan', 'sec-ch-pie-risp': 'pan', 'sec-divider-val': 'pan', 'kpis-val': 'pan', 'sec-ch-guad': 'pan',
-  'sec-ch-cat': 'spe', 'sec-cambiato': 'spe', 'sec-fisso-var': 'spe', 'sec-t-val': 'spe',
+  'sec-ch-cat': 'spe', 'sec-cambiato': 'spe', 'sec-voci': 'spe', 'sec-fisso-var': 'spe', 'sec-t-val': 'spe',
   'sec-carta-comp': 'car', 'sec-abbs': 'car', 'sec-abb-novita': 'car', 'sec-t-carta': 'car',
   'sec-proj-scen': 'con', 'sec-month18': 'con', 'sec-t-ann': 'con', 'sec-ch-proj': 'con',
 };
@@ -2848,8 +2874,66 @@ function applyBTab() {
   Object.values(CH).forEach(c => { try { c.resize && c.resize(); } catch (e) {} });
 }
 
+
+
+// Spesa effettiva per voce: movimenti di conto e carta riga per riga + voci fisse della carta
+const VOCI_RECLASS = /x ?pass|game ?pass|xbox|playstation|\bpsn\b/i;
+const CARTA_TIP = { msOffice: 'ABBONAMENTI ANNUALI', amazonPrime: 'ABBONAMENTI ANNUALI', disneyPlus: 'ABBONAMENTI VIDEO MENSILI', netflix: 'ABBONAMENTI VIDEO MENSILI',
+  dazn: 'ABBONAMENTI VIDEO MENSILI', nowTv: 'ABBONAMENTI VIDEO MENSILI', videogames: 'VIDEOGIOCHI & ELETTRONICA', spotify: 'ABBONAMENTI ONLINE', internet: 'INTERNET (CARTA)', telefono: 'TELEFONO (CARTA)', impBollo: 'IMPOSTA DI BOLLO' };
+const CARTA_CAT = { 'INTERNET (CARTA)': 'COSTO CASA', 'TELEFONO (CARTA)': 'COSTO SOPRAVVIVENZA', 'IMPOSTA DI BOLLO': 'GESTIONE CONTO' };
+function vociData() {
+  if (!D.tx || !D.tx.length) return null;
+  const n = ymNow(), lastY = n.y, lastM = n.m;      // mese in corso incluso
+  const rows = {}, recl = [];
+  const add = (tip, cat, y, src, v) => { if (y > lastY) return; const r = rows[tip] || (rows[tip] = { tip, cat, y: {} }); const o = r.y[y] || (r.y[y] = { carta: 0, conto: 0 }); o[src] += v; if (cat && !r.cat) r.cat = cat; };
+  for (const t of D.tx) {
+    if (t.y > lastY || (t.y === lastY && t.m > lastM)) continue;
+    let tip = t.tip, cat = t.cat;
+    if (VOCI_RECLASS.test(t.desc + ' ' + t.note) && tip !== 'VIDEOGIOCHI & ELETTRONICA') { recl.push(t); tip = 'VIDEOGIOCHI & ELETTRONICA'; cat = 'COSTO SFIZI'; }
+    add(tip, cat, t.y, t.src, t.amt);
+  }
+  const catOf = {}; Object.values(rows).forEach(r => { if (r.cat) catOf[r.tip] = r.cat; });
+  for (const [k, tip] of Object.entries(CARTA_TIP)) {
+    for (const key of Object.keys(D.cartaMonthly || {})) {
+      const [y, m] = key.split('-').map(Number); if (y > lastY || (y === lastY && m > lastM)) continue;
+      const v = D.cartaMonthly[key][k]; if (v > 0) add(tip, CARTA_CAT[tip] || catOf[tip] || (tip.startsWith('ABBON') ? 'COSTO ABBONAMENTI' : 'COSTO SFIZI'), y, 'carta', v);
+    }
+  }
+  return { rows: Object.values(rows), recl, lastY, lastM };
+}
+function buildVoci() {
+  const tb = document.getElementById('t-voci'), note = document.getElementById('voci-note'), foot = document.getElementById('voci-foot');
+  if (!tb) return;
+  const V = vociData();
+  if (!V) { tb.innerHTML = '<tr><td style="color:var(--muted)">Servono i fogli «Dettaglio Spese Generiche CC» e «Spese Generiche BANCOMAT».</td></tr>'; note.textContent = ''; foot.textContent = ''; return; }
+  const Y = V.lastY, yrs = [Y - 3, Y - 2, Y - 1, Y];
+  const tot = (r, y) => { const o = r.y[y]; return o ? o.carta + o.conto : 0; };
+  const byCat = {};
+  V.rows.forEach(r => { const c = r.cat || 'ALTRO'; (byCat[c] = byCat[c] || []).push(r); });
+  const catTot = c => byCat[c].reduce((s, r) => s + tot(r, Y), 0);
+  const cats = Object.keys(byCat).sort((a, b) => catTot(b) - catTot(a));
+  note.textContent = `${Y} fino a ${MESI_LONG_IT[V.lastM - 1].toLowerCase()} · € spesi nell'anno, voci variabili e abbonamenti`;
+  const f = v => v ? euro(v) : '<span style="color:var(--muted)">–</span>';
+  let h = `<thead><tr><th>Voce</th>${yrs.map(y => `<th style="text-align:right">${y}</th>`).join('')}<th style="text-align:right">${Y} da carta</th><th style="text-align:right">${Y} da conto</th><th style="text-align:right">vs ${Y - 1}</th></tr></thead><tbody>`;
+  const dcell = (a, b) => { if (!b) return '<td></td>'; const d = a - b; return `<td style="text-align:right" class="${d > 0 ? 'dn' : 'up'}">${Math.abs(d) < 1 ? '=' : eurS(d)}</td>`; };
+  for (const c of cats) {
+    const list = byCat[c].sort((a, b) => tot(b, Y) - tot(a, Y));
+    h += `<tr style="background:var(--surface2,rgba(255,255,255,.04))"><td><b>${c.replace('COSTO ', '').replace(/A'$/, 'À').toLowerCase().replace(/^./, x => x.toUpperCase())}</b></td>${yrs.map(y => `<td style="text-align:right"><b>${f(list.reduce((s, r) => s + tot(r, y), 0))}</b></td>`).join('')}<td style="text-align:right">${f(list.reduce((s, r) => s + ((r.y[Y] || {}).carta || 0), 0))}</td><td style="text-align:right">${f(list.reduce((s, r) => s + ((r.y[Y] || {}).conto || 0), 0))}</td>${dcell(catTot(c), list.reduce((s, r) => s + tot(r, Y - 1), 0))}</tr>`;
+    for (const r of list) {
+      if (!yrs.some(y => tot(r, y) > 0.5)) continue;
+      const o = r.y[Y] || { carta: 0, conto: 0 };
+      h += `<tr><td style="padding-left:22px;color:var(--muted)">${r.tip.toLowerCase().replace(/^./, x => x.toUpperCase())}</td>${yrs.map(y => `<td style="text-align:right">${f(tot(r, y))}</td>`).join('')}<td style="text-align:right">${f(o.carta)}</td><td style="text-align:right">${f(o.conto)}</td>${dcell(tot(r, Y), tot(r, Y - 1))}</tr>`;
+    }
+  }
+  const grand = y => V.rows.reduce((s, r) => s + tot(r, y), 0);
+  h += `<tr style="border-top:2px solid var(--border)"><td><b>Totale</b></td>${yrs.map(y => `<td style="text-align:right"><b>${euro(grand(y))}</b></td>`).join('')}<td style="text-align:right"><b>${euro(V.rows.reduce((s, r) => s + ((r.y[Y] || {}).carta || 0), 0))}</b></td><td style="text-align:right"><b>${euro(V.rows.reduce((s, r) => s + ((r.y[Y] || {}).conto || 0), 0))}</b></td>${dcell(grand(Y), grand(Y - 1))}</tr></tbody>`;
+  tb.innerHTML = h;
+  const rc = V.recl.filter(t => t.y === Y);
+  foot.innerHTML = `Le colonne «da carta» e «da conto» indicano da dove sono usciti i soldi. Restano fuori le voci fisse del conto (affitto, mutuo, gas, luce, auto, rate), che trovi in Conto › Riepilogo annuale (per l'anno in corso include le previsioni dei mesi mancanti).` +
+    (V.recl.length ? `<br>Riclassificate in «Videogiochi & elettronica» ${V.recl.length} spese che nel file erano altrove (es. ${[...new Set(V.recl.map(t => t.desc))].slice(0, 3).join(', ')}): in ${Y} ${rc.length ? euro(rc.reduce((s, t) => s + t.amt, 0)) : '0 €'}.` : '');
+}
 function buildBilancioExtras() {
-  buildCambiato(); buildFissoVar(); buildAbbNovita(); buildScenari();
+  buildVoci(); buildCambiato(); buildFissoVar(); buildAbbNovita(); buildScenari();
   applyBTab();
 }
 
@@ -2904,17 +2988,17 @@ function buildAbbNovita() {
   if (!body) return;
   const a = abbChanges();
   if (!a) { body.innerHTML = '<span style="color:var(--muted)">Non ci sono abbastanza mesi di storico della carta per il confronto.</span>'; note.textContent = ''; return; }
-  note.textContent = `Ultimi 12 mesi fino a ${mLabel(a.ref.y, a.ref.m).toLowerCase()} contro i 12 precedenti · le voci pagate una volta l'anno possono cambiare per la data di addebito`;
+  note.textContent = `Ultimi 12 mesi fino a ${mLabel(a.ref.y, a.ref.m).toLowerCase()} contro i 12 precedenti · carta + pagamenti dal conto · le voci pagate una volta l'anno possono cambiare per la data di addebito`;
   const fmt = v => euro(v);
   const sec = (ico, t, arr, f) => arr.length ? `<div class="abbn-b"><div class="abbn-t">${ico} ${t}</div>${arr.map(f).join('')}</div>` : '';
   const parts = [
     sec('🆕', 'Nuovi', a.nuovi, r => `<div>${r.name}: <b>${fmt(r.now)}</b> all'anno</div>`),
     sec('📈', 'Aumentati', a.su, r => `<div>${r.name}: ${fmt(r.prev)} → <b>${fmt(r.now)}</b> <span class="dn">(${eurS(r.now - r.prev)})</span></div>`),
     sec('📉', 'Diminuiti', a.giu, r => `<div>${r.name}: ${fmt(r.prev)} → <b>${fmt(r.now)}</b> <span class="up">(${eurS(r.now - r.prev)})</span></div>`),
-    sec('🛑', 'Finiti', a.finiti, r => `<div>${r.name}: erano ${fmt(r.prev)} all'anno</div>`),
+    sec('🛑', 'Finiti (nessun addebito trovato)', a.finiti, r => `<div>${r.name}: erano ${fmt(r.prev)} all'anno</div>`),
   ].join('');
   const d = a.totNow - a.totPrev;
-  body.innerHTML = `<div class="camb-tot">Costo annuo delle voci fisse della carta: <b>${fmt(a.totNow)}</b> (${euro(a.totNow / 12)} al mese) · ${a.totPrev ? `<b class="${d <= 0 ? 'up' : 'dn'}">${eurS(d)}</b> rispetto ai 12 mesi prima` : ''}</div>
+  body.innerHTML = `<div class="camb-tot">Costo annuo degli abbonamenti (carta + conto): <b>${fmt(a.totNow)}</b> (${euro(a.totNow / 12)} al mese) · ${a.totPrev ? `<b class="${d <= 0 ? 'up' : 'dn'}">${eurS(d)}</b> rispetto ai 12 mesi prima` : ''}</div>
     ${parts ? `<div class="abbn-grid">${parts}</div>` : '<div style="color:var(--muted);font-size:12px;margin-top:8px">Nessun abbonamento nuovo, finito o con variazioni di rilievo.</div>'}`;
 }
 
@@ -3971,10 +4055,24 @@ function catChanges(yr) {
 // Abbonamenti della carta: ultimi 12 mesi chiusi contro i 12 precedenti
 const ABB_ITEMS = [['msOffice', 'Microsoft Office'], ['disneyPlus', 'Disney Plus'], ['netflix', 'Netflix'], ['dazn', 'DAZN'], ['nowTv', 'NOW TV'], ['videogames', 'Videogames'],
   ['spotify', 'Spotify'], ['internet', 'Internet'], ['telefono', 'Telefono'], ['amazonPrime', 'Amazon Prime'], ['impBollo', 'Imposta di bollo']];
+// Pagamenti di abbonamenti che non passano dalla riga fissa della carta (es. Xbox Game Pass pagato dal conto)
+const ABB_RX = { msOffice: /microsoft 365|office 365/i, disneyPlus: /disney/i, netflix: /netflix/i, dazn: /dazn/i, nowTv: /now ?tv/i,
+  videogames: /x ?pass|game ?pass|xbox|playstation|\bpsn\b/i, spotify: /spotify/i, amazonPrime: /amazon prime|prime video/i };
+function txAbbIndex() {
+  if (D._txAbb) return D._txAbb;
+  const ix = {};
+  for (const t of (D.tx || [])) for (const k in ABB_RX) if (ABB_RX[k].test(t.desc + ' ' + t.note)) { const key = `${k}|${t.y}-${t.m}`; ix[key] = (ix[key] || 0) + t.amt; }
+  return (D._txAbb = ix);
+}
+function abbMonth(k, y, m) {
+  const o = D.cartaMonthly[`${y}-${m}`];
+  if (o && o[k] > 0) return o[k];
+  return txAbbIndex()[`${k}|${y}-${m}`] || 0;
+}
 function abbChanges() {
   if (!D.cartaMonthly) return null;
   const n = ymNow(), ref = addMonths(n.y, n.m, -1), prevEnd = addMonths(ref.y, ref.m, -12);
-  const sum = (k, end) => { let s = 0; for (let j = 0; j < 12; j++) { const a = addMonths(end.y, end.m, -j), o = D.cartaMonthly[`${a.y}-${a.m}`]; if (o && o[k] > 0) s += o[k]; } return s; };
+  const sum = (k, end) => { let s = 0; for (let j = 0; j < 12; j++) { const a = addMonths(end.y, end.m, -j); s += abbMonth(k, a.y, a.m); } return s; };
   const rows = ABB_ITEMS.map(([k, name]) => ({ k, name, now: sum(k, ref), prev: sum(k, prevEnd) }));
   if (!rows.some(r => r.prev > 0) || !rows.some(r => r.now > 0)) return null;
   const nuovi = rows.filter(r => r.prev === 0 && r.now > 0);
