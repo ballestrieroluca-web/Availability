@@ -548,6 +548,36 @@ tr.rH{background:rgba(88,166,255,.03)}
   /* Section headers */
   .sec-hd{flex-direction:column;align-items:flex-start;gap:4px}
 }
+
+/* ── Home: avviso e righe di dettaglio ── */
+.halert{border-radius:12px;padding:12px 16px;margin:8px 0 14px;font-size:13px;line-height:1.5;border:1px solid var(--border);background:var(--surf);display:flex;gap:8px;align-items:flex-start}
+.halert.ok{border-color:rgba(63,185,80,.5);background:rgba(63,185,80,.08)}
+.halert.warn{border-color:rgba(227,179,65,.6);background:rgba(227,179,65,.08)}
+.halert.bad{border-color:rgba(255,123,114,.6);background:rgba(255,123,114,.09)}
+.halert-more{font-size:12px;color:var(--muted);margin:-6px 4px 14px;line-height:1.6}
+.halert-more summary{cursor:pointer}
+.hk-line{font-size:12px;color:var(--text);line-height:1.5;margin-top:6px}
+.hk-line .up,.camb-d.up,.camb-bar i.up{color:var(--green)}
+.hk-line .dn,.camb-d.dn,.camb-bar i.dn{color:var(--red)}
+.up{color:var(--green)}.dn{color:var(--red)}
+/* ── Bilancio: schede e nuove sezioni ── */
+.btabs{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-bottom:16px;padding-bottom:2px}
+.btabs .pill{white-space:nowrap;padding:7px 16px;font-size:13px}
+.tab-off{display:none!important}
+.camb-tot{font-size:13px;line-height:1.6}
+.camb-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 1.4fr auto;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--border);font-size:12.5px}
+.camb-row:first-of-type{border-top:0}
+.camb-n span,.camb-d span{display:block;font-size:11px;color:var(--muted)}
+.camb-d{text-align:right;font-weight:700;white-space:nowrap}
+.camb-bar{height:8px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden}
+.camb-bar i{display:block;height:100%;border-radius:6px;background:currentColor}
+.abbn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px}
+.abbn-t{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px}
+.abbn-b div{font-size:12.5px;line-height:1.7}
+.scen-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+@media(max-width:700px){.camb-row{grid-template-columns:1fr auto}.camb-bar{grid-column:1/-1;order:3}}
+.vnote{color:var(--muted)}
+.sec-note{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -594,6 +624,7 @@ tr.rH{background:rgba(88,166,255,.03)}
     <p>Carica il file Excel per visualizzare i dati.</p>
   </div>
   <div id="dash-home" class="hidden">
+    <div id="home-alert"></div>
     <div class="home-kpi-grid" id="kpis-home"></div>
   </div>
 </div><!-- /page-home -->
@@ -607,6 +638,8 @@ tr.rH{background:rgba(88,166,255,.03)}
 </div>
 
 <div id="dash" class="hidden">
+
+  <div class="btabs" id="btabs"></div>
 
   <!-- VISTA TOGGLE + YEAR/MONTH PILLS -->
   <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
@@ -679,6 +712,19 @@ tr.rH{background:rgba(88,166,255,.03)}
     </div>
   </div>
 
+  <div class="sec" id="sec-cambiato">
+    <div class="sec-hd"><span class="sec-title" id="camb-title">Cosa è cambiato</span><span class="sec-note" id="camb-note"></span></div>
+    <div class="cgrid" id="camb-grid"></div>
+  </div>
+
+  <div class="cgrid" id="sec-fisso-var">
+    <div class="cc full">
+      <div class="cc-title">Spese fisse, necessarie e discrezionali — media mensile per anno</div>
+      <canvas id="ch-fv" style="max-height:260px"></canvas>
+      <div class="vnote" id="fv-note" style="margin:10px 0 0"></div>
+    </div>
+  </div>
+
   <div class="cgrid" id="sec-ch-guad">
     <div class="cc">
       <div class="cc-title">Guadagno vs Spese totali</div>
@@ -701,19 +747,23 @@ tr.rH{background:rgba(88,166,255,.03)}
     <div class="tcard"><div class="tscroll"><table id="t-ann"></table></div></div>
   </div>
 
-  <div class="two" id="sec-abbs-month">
-    <div class="sec">
-      <div class="sec-hd">
-        <span class="sec-title">Abbonamenti Carta <span class="badge" id="abb-yr"></span></span>
-      </div>
-      <div class="abb-grid" id="abbs"></div>
+  <div class="sec" id="sec-abbs">
+    <div class="sec-hd">
+      <span class="sec-title">Abbonamenti Carta <span class="badge" id="abb-yr"></span></span>
     </div>
-    <div class="sec">
-      <div class="sec-hd"><span class="sec-title">Ultimi 18 mesi</span></div>
-      <div class="tcard"><div class="tscroll">
-        <table id="t-month" style="font-size:12px"></table>
-      </div></div>
-    </div>
+    <div class="abb-grid" id="abbs"></div>
+  </div>
+
+  <div class="sec" id="sec-abb-novita">
+    <div class="sec-hd"><span class="sec-title">Abbonamenti: novità</span><span class="sec-note" id="abbn-note"></span></div>
+    <div class="cc" id="abbn-body"></div>
+  </div>
+
+  <div class="sec" id="sec-month18">
+    <div class="sec-hd"><span class="sec-title">Ultimi 18 mesi</span></div>
+    <div class="tcard"><div class="tscroll">
+      <table id="t-month" style="font-size:12px"></table>
+    </div></div>
   </div>
 
   <div class="sec" id="sec-t-carta">
@@ -721,9 +771,18 @@ tr.rH{background:rgba(88,166,255,.03)}
     <div class="tcard"><div class="tscroll"><table id="t-carta"></table></div></div>
   </div>
 
+  <div class="sec" id="sec-proj-scen">
+    <div class="sec-hd"><span class="sec-title">Dove sarà il saldo — tre scenari</span><span class="sec-note">Prossimi 24 mesi</span></div>
+    <div class="cc">
+      <div class="scen-ctl" id="scen-ctl"></div>
+      <canvas id="ch-scen" style="max-height:280px"></canvas>
+      <div class="vnote" id="scen-txt" style="margin:10px 0 0"></div>
+    </div>
+  </div>
+
   <div class="sec" id="sec-ch-proj">
     <div class="sec-hd">
-      <span class="sec-title">Proiezione Saldo Conto</span>
+      <span class="sec-title">Saldo a fine anno</span>
       <span class="sec-note">I valori futuri sono calcolati dal foglio BILANCIO</span>
     </div>
     <div class="cc">
@@ -762,7 +821,7 @@ tr.rH{background:rgba(88,166,255,.03)}
     <!-- Grafici -->
     <div class="cgrid">
       <div class="cc full">
-        <div class="cc-title">Costo mese per mese — quest'anno contro gli anni scorsi</div>
+        <div class="cc-title" id="ene-months-title">Costo mese per mese — anno per anno</div>
         <canvas id="ch-ene-months" style="max-height:260px"></canvas>
       </div>
     </div>
@@ -774,7 +833,7 @@ tr.rH{background:rgba(88,166,255,.03)}
     </div>
     <div class="cgrid">
       <div class="cc full">
-        <div class="cc-title">Da cosa è fatta la bolletta — quanto dipende dal fornitore</div>
+        <div class="cc-title" id="ene-comp-title">Da cosa è fatta la bolletta — quanto dipende dal fornitore</div>
         <canvas id="ch-ene-comp" style="max-height:260px"></canvas>
         <div class="vnote" id="ene-comp-note" style="margin:10px 0 0"></div>
       </div>
@@ -782,11 +841,11 @@ tr.rH{background:rgba(88,166,255,.03)}
 
     <!-- Tabelle -->
     <div class="sec">
-      <div class="sec-hd"><span class="sec-title">📅 Anno per anno</span><span class="sec-note" id="ene-year-note"></span></div>
+      <div class="sec-hd"><span class="sec-title" id="ene-years-title">📅 Anno per anno</span><span class="sec-note" id="ene-year-note"></span></div>
       <div class="tcard"><div class="tscroll"><table id="t-ene-years"></table></div></div>
     </div>
     <div class="sec">
-      <div class="sec-hd"><span class="sec-title">🧾 Ultime bollette</span><span class="sec-note" id="ene-bills-note">Confronto con gli stessi mesi dell'anno scorso</span></div>
+      <div class="sec-hd"><span class="sec-title" id="ene-bills-title">🧾 Ultime bollette</span><span class="sec-note" id="ene-bills-note">Confronto con gli stessi mesi dell'anno scorso</span></div>
       <div class="tcard"><div class="tscroll"><table id="t-ene-bills"></table></div></div>
     </div>
 
@@ -1752,6 +1811,7 @@ function render() {
   buildKPIVal();
   buildValTable();
   buildChartProj();
+  buildBilancioExtras();
 }
 
 function buildPills() {
@@ -2767,6 +2827,130 @@ function buildChartProj() {
 }
 
 // ══════════════════════════════════════════════════════
+//  BILANCIO — schede, «cosa è cambiato», fisso/variabile, abbonamenti, scenari
+// ══════════════════════════════════════════════════════
+const BTABS = [['pan', '📊 Panoramica'], ['spe', '🛒 Spese'], ['car', '💳 Carta'], ['con', '🏦 Conto']];
+const BTAB_MAP = {
+  'kpis': 'pan', 'kpis-month': 'pan', 'carta-banner': 'pan', 'sec-ch-month': 'pan', 'sec-ch-pie-risp': 'pan', 'sec-divider-val': 'pan', 'kpis-val': 'pan', 'sec-ch-guad': 'pan',
+  'sec-ch-cat': 'spe', 'sec-cambiato': 'spe', 'sec-fisso-var': 'spe', 'sec-t-val': 'spe',
+  'sec-carta-comp': 'car', 'sec-abbs': 'car', 'sec-abb-novita': 'car', 'sec-t-carta': 'car',
+  'sec-proj-scen': 'con', 'sec-month18': 'con', 'sec-t-ann': 'con', 'sec-ch-proj': 'con',
+};
+let BTAB = 'pan', SCEN_PCT = 10;
+try { const t = localStorage.getItem('dash-btab-v1'); if (t && BTABS.some(x => x[0] === t)) BTAB = t; const p = parseInt(localStorage.getItem('dash-scen-v1')); if ([5, 10, 20].includes(p)) SCEN_PCT = p; } catch (e) {}
+
+function setBTab(t) { BTAB = t; try { localStorage.setItem('dash-btab-v1', t); } catch (e) {} applyBTab(); }
+function applyBTab() {
+  const bar = document.getElementById('btabs');
+  if (bar) { bar.innerHTML = ''; BTABS.forEach(([k, lbl]) => { const b = document.createElement('button'); b.className = 'pill' + (k === BTAB ? ' on' : ''); b.textContent = lbl; b.onclick = () => setBTab(k); bar.appendChild(b); }); }
+  Object.entries(BTAB_MAP).forEach(([id, t]) => { const el = document.getElementById(id); if (el) el.classList.toggle('tab-off', t !== BTAB); });
+  // i grafici nascosti non si disegnano bene: li ridimensiono quando diventano visibili
+  Object.values(CH).forEach(c => { try { c.resize && c.resize(); } catch (e) {} });
+}
+
+function buildBilancioExtras() {
+  buildCambiato(); buildFissoVar(); buildAbbNovita(); buildScenari();
+  applyBTab();
+}
+
+// ── Cosa è cambiato rispetto all'anno scorso ──
+function buildCambiato() {
+  const box = document.getElementById('camb-grid'), ttl = document.getElementById('camb-title'), note = document.getElementById('camb-note');
+  if (!box) return;
+  if (!D.val) { box.innerHTML = ''; return; }
+  const V = D.val, yr = (SEL === 'all' || V.years.indexOf(SEL) < 1) ? V.years[V.years.length - 1] : SEL;
+  const ch = catChanges(yr);
+  if (!ch) { box.innerHTML = '<div class="cc" style="color:var(--muted)">Servono almeno due anni di dati per il confronto.</div>'; return; }
+  const i = V.years.indexOf(yr), tot = V.totale[i], totP = V.totale[i - 1];
+  ttl.textContent = `Cosa è cambiato: ${yr} contro ${yr - 1}`;
+  note.textContent = 'Spesa media al mese, voce per voce' + (yr === ymNow().y ? ` · ${yr} è in corso` : '');
+  const rows = ch.filter(c => Math.abs(c.d) >= 5);
+  const up = rows.filter(c => c.d > 0).sort((a, b) => b.d - a.d).slice(0, 6), dn = rows.filter(c => c.d < 0).sort((a, b) => a.d - b.d).slice(0, 6);
+  const mx = Math.max(1, ...rows.map(c => Math.abs(c.d)));
+  const list = (arr, cls, empty) => arr.length ? arr.map(c => `<div class="camb-row"><div class="camb-n">${c.n}<span>${euro(c.b)} → ${euro(c.a)}</span></div>
+      <div class="camb-bar"><i class="${cls}" style="width:${Math.max(4, Math.abs(c.d) / mx * 100)}%"></i></div>
+      <div class="camb-d ${cls}">${eurS(c.d)}<span>${c.p === null ? 'nuova' : fP(c.p, 0)}</span></div></div>`).join('') : `<div style="color:var(--muted);font-size:12px">${empty}</div>`;
+  const dT = tot - totP;
+  box.innerHTML = `
+    <div class="cc full" style="grid-column:1/-1"><div class="camb-tot">Spesa mensile totale: <b>${euro(tot)}</b> contro ${euro(totP)} — <b class="${dT <= 0 ? 'up' : 'dn'}">${eurS(dT)} al mese</b> (${eurS(dT * 12)} in un anno)</div></div>
+    <div class="cc"><div class="cc-title">🔺 Dove spendi di più</div>${list(up, 'dn', 'Nessuna voce è salita in modo significativo.')}</div>
+    <div class="cc"><div class="cc-title">🔻 Dove spendi di meno</div>${list(dn, 'up', 'Nessuna voce è scesa in modo significativo.')}</div>`;
+}
+
+// ── Fisso, necessario, discrezionale ──
+function buildFissoVar() {
+  kill('fv');
+  const note = document.getElementById('fv-note'), cv = document.getElementById('ch-fv');
+  if (!cv) return;
+  if (!D.val) { note.textContent = ''; return; }
+  const V = D.val, yrs = V.years, cats = vcats();
+  const gsum = (g, i) => cats.filter(c => c.g === g).reduce((s, c) => s + (V[c.k][i] || 0), 0);
+  const COL = { fisse: '#58a6ff', nec: '#e3b341', disc: '#f78166' };
+  const sets = Object.keys(VGROUPS).map(g => ({ label: VGROUPS[g], backgroundColor: COL[g] + 'dd', borderColor: '#0d1117', borderWidth: 1.5, data: yrs.map((_, i) => gsum(g, i)) }));
+  CH.fv = new Chart(cv, { type: 'bar', data: { labels: yrs.map(String), datasets: sets },
+    options: { ...COPTS, plugins: { ...COPTS.plugins, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${euro(c.raw)}/mese` } } },
+      scales: { ...COPTS.scales, x: { ...COPTS.scales.x, stacked: true }, y: { ...COPTS.scales.y, stacked: true } } } });
+  const li = yrs.length - 1, tot = Object.keys(VGROUPS).reduce((s, g) => s + gsum(g, li), 0);
+  if (tot > 0) {
+    const q = g => (gsum(g, li) / tot * 100).toFixed(0);
+    note.innerHTML = `Nel ${yrs[li]}: <b>${q('fisse')}%</b> spese fisse (${euro(gsum('fisse', li))}/mese), <b>${q('nec')}%</b> necessarie variabili, <b>${q('disc')}%</b> discrezionali (${euro(gsum('disc', li))}/mese): è la parte su cui puoi intervenire.<br>
+      Fisse = casa, auto, abbonamenti, tasse, gestione conto, rate. Necessarie = sopravvivenza. Discrezionali = svaghi, vacanze, sfizi, prelievi.`;
+  }
+}
+
+// ── Abbonamenti: novità ──
+function buildAbbNovita() {
+  const body = document.getElementById('abbn-body'), note = document.getElementById('abbn-note');
+  if (!body) return;
+  const a = abbChanges();
+  if (!a) { body.innerHTML = '<span style="color:var(--muted)">Non ci sono abbastanza mesi di storico della carta per il confronto.</span>'; note.textContent = ''; return; }
+  note.textContent = `Ultimi 12 mesi fino a ${mLabel(a.ref.y, a.ref.m).toLowerCase()} contro i 12 precedenti · le voci pagate una volta l'anno possono cambiare per la data di addebito`;
+  const fmt = v => euro(v);
+  const sec = (ico, t, arr, f) => arr.length ? `<div class="abbn-b"><div class="abbn-t">${ico} ${t}</div>${arr.map(f).join('')}</div>` : '';
+  const parts = [
+    sec('🆕', 'Nuovi', a.nuovi, r => `<div>${r.name}: <b>${fmt(r.now)}</b> all'anno</div>`),
+    sec('📈', 'Aumentati', a.su, r => `<div>${r.name}: ${fmt(r.prev)} → <b>${fmt(r.now)}</b> <span class="dn">(${eurS(r.now - r.prev)})</span></div>`),
+    sec('📉', 'Diminuiti', a.giu, r => `<div>${r.name}: ${fmt(r.prev)} → <b>${fmt(r.now)}</b> <span class="up">(${eurS(r.now - r.prev)})</span></div>`),
+    sec('🛑', 'Finiti', a.finiti, r => `<div>${r.name}: erano ${fmt(r.prev)} all'anno</div>`),
+  ].join('');
+  const d = a.totNow - a.totPrev;
+  body.innerHTML = `<div class="camb-tot">Costo annuo delle voci fisse della carta: <b>${fmt(a.totNow)}</b> (${euro(a.totNow / 12)} al mese) · ${a.totPrev ? `<b class="${d <= 0 ? 'up' : 'dn'}">${eurS(d)}</b> rispetto ai 12 mesi prima` : ''}</div>
+    ${parts ? `<div class="abbn-grid">${parts}</div>` : '<div style="color:var(--muted);font-size:12px;margin-top:8px">Nessun abbonamento nuovo, finito o con variazioni di rilievo.</div>'}`;
+}
+
+// ── Proiezione del saldo: tre scenari ──
+function buildScenari() {
+  kill('scen');
+  const cv = document.getElementById('ch-scen'), txt = document.getElementById('scen-txt'), ctl = document.getElementById('scen-ctl');
+  if (!cv) return;
+  const soglia = getSoglia();
+  ctl.innerHTML = `<span class="tb-label">Spese</span>` + [5, 10, 20].map(p => `<button class="pill${p === SCEN_PCT ? ' on' : ''}" onclick="SCEN_PCT=${p};try{localStorage.setItem('dash-scen-v1',${p})}catch(e){};buildScenari()">±${p}%</button>`).join('') +
+    `<span class="tb-label" style="margin-left:12px">Soglia saldo</span><input id="scen-soglia" type="number" step="500" value="${soglia}" style="width:90px;background:var(--surf);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:4px 8px;font:inherit"> €`;
+  const inp = document.getElementById('scen-soglia');
+  inp.onchange = () => { const v = parseFloat(inp.value); if (isFinite(v)) { setSoglia(v); buildScenari(); if (CUR_PAGE === 'home') renderHome(); } };
+  const n = ymNow(), H = 24, labels = [], base = [];
+  for (let k = 0; k <= H; k++) { const p = addMonths(n.y, n.m, k); labels.push(`${MESI_AB[p.m - 1]} ${String(p.y).slice(2)}`); const s = saldoOf(p.y, p.m); base.push(s); }
+  const past = (D.monthly || []).filter(m => m.year * 12 + m.month < n.y * 12 + n.m && m.uscite > 0).slice(-12);
+  if (!past.length || base.every(v => v === null)) { txt.textContent = 'Non ci sono dati sufficienti per la proiezione.'; return; }
+  const U = past.reduce((s, m) => s + m.uscite, 0) / past.length, delta = SCEN_PCT / 100 * U;
+  const pru = base.map((v, k) => v === null ? null : v - delta * k), fav = base.map((v, k) => v === null ? null : v + delta * k);
+  CH.scen = new Chart(cv, { type: 'line', data: { labels, datasets: [
+    { label: `Prudente (spese +${SCEN_PCT}%)`, data: pru, borderColor: '#f78166', backgroundColor: '#f78166', borderWidth: 2, tension: .3, pointRadius: 0 },
+    { label: 'Come da piano', data: base, borderColor: '#58a6ff', backgroundColor: '#58a6ff', borderWidth: 3, tension: .3, pointRadius: 0 },
+    { label: `Favorevole (spese −${SCEN_PCT}%)`, data: fav, borderColor: '#3fb950', backgroundColor: '#3fb950', borderWidth: 2, tension: .3, pointRadius: 0 },
+    { label: 'Soglia', data: labels.map(() => soglia), borderColor: '#e3b341', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0 },
+  ] }, options: { ...COPTS, interaction: { mode: 'index', intersect: false }, plugins: { ...COPTS.plugins, tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${euro(c.raw)}` } } } } });
+  const rep = (name, arr) => {
+    let mn = null, below = null;
+    arr.forEach((v, k) => { if (v === null) return; const p = addMonths(n.y, n.m, k); if (!mn || v < mn.v) mn = { v, p }; if (below === null && v < soglia) below = p; });
+    const at = k => arr[k] === null || arr[k] === undefined ? '—' : euro(arr[k]);
+    return `<b>${name}</b>: tra 12 mesi ${at(12)}, tra 24 mesi ${at(24)} · minimo ${euro(mn.v)} (${MESI_LONG_IT[mn.p.m - 1].toLowerCase()} ${mn.p.y}), ${below ? `<span class="dn">sotto soglia da ${MESI_LONG_IT[below.m - 1].toLowerCase()} ${below.y}</span>` : '<span class="up">sempre sopra la soglia</span>'}`;
+  };
+  txt.innerHTML = `${rep('Prudente', pru)}<br>${rep('Come da piano', base)}<br>${rep('Favorevole', fav)}<br>
+    Il piano è quello calcolato dal foglio BILANCIO. Prudente e favorevole aggiungono o tolgono il ${SCEN_PCT}% della tua spesa media mensile degli ultimi ${past.length} mesi (${euro(U)}), mese dopo mese.`;
+}
+
+// ══════════════════════════════════════════════════════
 //  PAGE SWITCHING
 // ══════════════════════════════════════════════════════
 function switchPage(page) {
@@ -2785,6 +2969,7 @@ function switchPage(page) {
 //  ENERGIA — legge il foglio «ENERGIA» e risponde a: pago di più o di meno?
 // ══════════════════════════════════════════════════════
 let ENE_FORN = 'Luce';
+const eneTag = f => `${ENE_META[f].ico} ${f.toUpperCase()}`;
 const ENE_META = { Luce:{unit:'kWh', ico:'⚡', col:'#f78166', col2:'#ffb199', col3:'#7d4a40'}, Gas:{unit:'Smc', ico:'🔥', col:'#58a6ff', col2:'#a5d0ff', col3:'#2f5d8f'} };
 const MESI_AB = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const fN = (v, d = 2) => (typeof v === 'number' && isFinite(v)) ? v.toFixed(d).replace('.', ',') : '—';
@@ -2921,7 +3106,7 @@ function verdictCard(lbl, c, unit, cls) {
     <div class="vsent">${eneSentence(c, unit)}</div></div>`;
 }
 function buildVerdictsEne(E, X) {
-  const unit = ENE_META[X.forn].unit, nm = X.forn === 'Luce' ? 'luce' : 'gas';
+  const unit = ENE_META[X.forn].unit, nm = X.forn === 'Luce' ? 'luce' : 'gas', tg = eneTag(X.forn);
   document.getElementById('ene-asof').textContent = X.anchor !== null ? `Dati fino a ${monthLabel(X.anchor)}` : '';
   // riepilogo luce + gas (ultimi 12 mesi)
   const XL = eneCompute(E, 'Luce'), XG = eneCompute(E, 'Gas');
@@ -2942,7 +3127,7 @@ function buildVerdictsEne(E, X) {
       const yr = X.last12.km * 12, s = (ct.prev.price - ct.cur.price) * yr + (ct.prev.fissaM - ct.cur.fissaM) * 12;
       sav = `Stima su 12 mesi di consumi: ${s >= 0 ? '' : '+'}${eur2(Math.abs(s))} ${s >= 0 ? 'in meno' : 'in più'} tra materia e quota fissa, IVA esclusa.`;
     }
-    third = `<div class="kpi c3"><div class="kpi-lbl">Contratto attuale (${ct.oper}) vs precedente</div>
+    third = `<div class="kpi c3"><div class="kpi-lbl">${tg} · Contratto attuale (${ct.oper}) vs precedente</div>
       <div class="kpi-val ${Math.abs(dp) < 0.02 ? 'neu' : dp < 0 ? 'pos' : 'neg'}">${dp < 0 ? '▼' : '▲'} ${fP(dp)}</div>
       <div class="kpi-sub">Prezzo materia ${fN(ct.cur.price, 4)} contro ${fN(ct.prev.price, 4)} €/${unit}</div>
       <div class="kpi-trend ${df <= 0 ? 'up' : 'dn'}">quota fissa ${fN(ct.cur.fissaM)} contro ${fN(ct.prev.fissaM)} €/mese</div>
@@ -2952,15 +3137,15 @@ function buildVerdictsEne(E, X) {
     const cur = eneGroup(b12.filter(b => b.k1 > last - 12 && b.k1 <= last)), prv = eneGroup(b12.filter(b => b.k1 > last - 24 && b.k1 <= last - 12));
     if (cur.price && prv.price) {
       const dp = cur.price / prv.price - 1;
-      third = `<div class="kpi c3"><div class="kpi-lbl">Prezzo della materia vs 12 mesi prima</div>
+      third = `<div class="kpi c3"><div class="kpi-lbl">${tg} · Prezzo della materia vs 12 mesi prima</div>
         <div class="kpi-val ${Math.abs(dp) < 0.02 ? 'neu' : dp < 0 ? 'pos' : 'neg'}">${dp < 0 ? '▼' : '▲'} ${fP(dp)}</div>
         <div class="kpi-sub">${fN(cur.price, 4)} contro ${fN(prv.price, 4)} €/${unit}</div>
         <div class="vsent">Nessun cambio di fornitore registrato per il ${nm}: quando inserirai le bollette del nuovo contratto qui comparirà il confronto con il precedente.</div></div>`;
-    } else third = verdictCard('Contratto attuale vs precedente', null, unit, 'c3');
+    } else third = verdictCard(tg + ' · Contratto attuale vs precedente', null, unit, 'c3');
   }
   document.getElementById('ene-verdicts').innerHTML =
-    verdictCard('Ultimi 3 mesi vs stessi mesi anno scorso', X.c3, unit, 'c0') +
-    verdictCard('Ultimi 12 mesi vs 12 mesi prima', X.c12, unit, 'c2') + third;
+    verdictCard(tg + ' · Ultimi 3 mesi vs stessi mesi anno scorso', X.c3, unit, 'c0') +
+    verdictCard(tg + ' · Ultimi 12 mesi vs 12 mesi prima', X.c12, unit, 'c2') + third;
   document.getElementById('ene-vnote').textContent =
     `«Costo per ${unit}» = spesa totale della bolletta (senza canone TV) divisa per i consumi: comprende anche quota fissa, trasporto e tasse. ` +
     'Confronti sullo stesso periodo di un anno prima, così l\'inverno non si confronta con l\'estate.';
@@ -2978,11 +3163,12 @@ function buildChartEneMonths(X) {
   kill('enem');
   const meta = ENE_META[X.forn];
   if (X.anchor === null) return;
-  const yrs = [...new Set(X.S.filter(p => p.cost > 0).map(p => p.y))].sort((a, b) => b - a).slice(0, 3);
-  const cols = [meta.col, '#8b949e', meta.col3];
+  document.getElementById('ene-months-title').innerHTML = `${eneTag(X.forn)} — costo mese per mese (€), tutti gli anni <span style="text-transform:none;letter-spacing:0;color:var(--faint)">· tocca un anno nella legenda per nasconderlo</span>`;
+  const yrs = [...new Set(X.S.filter(p => p.cost > 0).map(p => p.y))].sort((a, b) => b - a);
+  const cols = [meta.col, '#8b949e', '#bc8cff', '#e3b341', '#3fb950', '#79c0ff', '#f778ba', '#56d4dd'];
   const sets = yrs.map((y, i) => ({
-    label: String(y), borderColor: cols[i], backgroundColor: cols[i], borderWidth: i === 0 ? 3 : 2, tension: .3,
-    borderDash: i === 2 ? [4, 4] : [], pointRadius: i === 0 ? 4 : 3, spanGaps: false,
+    label: String(y), borderColor: cols[i % cols.length], backgroundColor: cols[i % cols.length], borderWidth: i === 0 ? 3 : 1.6, tension: .3,
+    borderDash: i >= 2 ? [4, 4] : [], pointRadius: i === 0 ? 4 : 2.5, spanGaps: false,
     data: MESI_AB.map((_, mi) => { const p = X.S.find(s => s.y === y && s.m === mi); return p && p.cost > 0 ? p.cost : null; })
   }));
   const o = eneOpts(v => euro(v, true));
@@ -2992,7 +3178,7 @@ function buildChartEneMonths(X) {
 function buildChartEnePrice(X) {
   kill('enep');
   const meta = ENE_META[X.forn], unit = meta.unit;
-  document.getElementById('ene-price-title').textContent = `Prezzo della materia per ${unit} (€/${unit}) — bolletta per bolletta`;
+  document.getElementById('ene-price-title').textContent = `${eneTag(X.forn)} — prezzo della materia per ${unit} (€/${unit}), bolletta per bolletta`;
   const bs = X.bills.filter(b => b.prezzo > 0 && b.prezzo < 3);
   if (!bs.length) return;
   const isCur = b => X.curSet && X.curSet.has(b);
@@ -3018,6 +3204,7 @@ function eneByYear(bills) {
 }
 function buildChartEneComp(X) {
   kill('enec');
+  document.getElementById('ene-comp-title').textContent = `${eneTag(X.forn)} — da cosa è fatta la bolletta, anno per anno (% del totale)`;
   const Y = eneByYear(X.bills), yrs = Object.keys(Y).map(Number).sort((a, b) => a - b).filter(y => Y[y].tot > 0);
   const note = document.getElementById('ene-comp-note');
   if (!yrs.length) { note.textContent = ''; return; }
@@ -3040,6 +3227,8 @@ function buildChartEneComp(X) {
 }
 function buildTablesEne(X) {
   const unit = ENE_META[X.forn].unit;
+  document.getElementById('ene-years-title').textContent = `📅 ${eneTag(X.forn)} — anno per anno`;
+  document.getElementById('ene-bills-title').textContent = `🧾 ${eneTag(X.forn)} — ultime bollette`;
   const Y = eneByYear(X.bills), yrs = Object.keys(Y).map(Number).sort((a, b) => a - b).filter(y => Y[y].n > 0);
   const th = (t, l) => `<th${l ? '' : ' style="text-align:right"'}>${t}</th>`;
   let h = `<thead><tr>${th('Anno', 1)}${th('Costo al mese')}${th('Consumo al mese (' + unit + ')')}${th('Prezzo materia €/' + unit)}${th('Costo per ' + unit)}${th('Costo al mese vs anno prima')}</tr></thead><tbody>`;
@@ -3737,7 +3926,66 @@ function buildKPICointMonth() {
 // ══════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════
-//  HOME PAGE — 4 KPI ESSENZIALI
+//  UTILITÀ COMUNI (Home + Bilancio)
+// ══════════════════════════════════════════════════════
+const MESI_LONG_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const SOGLIA_KEY = 'dash-soglia-v1';
+function getSoglia() { try { const v = parseFloat(localStorage.getItem(SOGLIA_KEY)); return isFinite(v) ? v : 10000; } catch (e) { return 10000; } }
+function setSoglia(v) { try { localStorage.setItem(SOGLIA_KEY, String(v)); } catch (e) {} }
+const eurS = v => (v >= 0 ? '+' : '−') + euro(Math.abs(v));
+function ymNow() { const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() + 1 }; }
+function addMonths(y, m, k) { const t = y * 12 + (m - 1) + k; return { y: Math.floor(t / 12), m: (t % 12 + 12) % 12 + 1 }; }
+function mLabel(y, m) { return `${MESI_LONG_IT[m - 1]} ${y}`; }
+function saldoOf(y, m) { const s = (D.saldoMonthly || []).find(s => s.year === y && s.month === m); return s ? s.saldo : null; }
+
+// saldo più basso nei prossimi 12 mesi e mesi con forte calo
+function saldoAhead() {
+  const n = ymNow(); let min = null;
+  const drops = [];
+  for (let k = 0; k <= 12; k++) {
+    const p = addMonths(n.y, n.m, k), s = saldoOf(p.y, p.m);
+    if (s === null) continue;
+    if (!min || s < min.s) min = { s, y: p.y, m: p.m };
+    if (k > 0) { const q = addMonths(n.y, n.m, k - 1), sp = saldoOf(q.y, q.m); if (sp !== null && s - sp < -1000) drops.push({ y: p.y, m: p.m, d: s - sp }); }
+  }
+  drops.sort((a, b) => a.d - b.d);
+  return { min, drops: drops.slice(0, 3) };
+}
+
+// Categorie di spesa (foglio «Valutazione Spese e Risparmi») e raggruppamento fisso / necessario / discrezionale
+const VGROUPS = { fisse: 'Fisse (obbligate)', nec: 'Necessarie variabili', disc: 'Discrezionali' };
+function vcats() {
+  return [
+    { k: 'costoCasa', n: 'Casa', g: 'fisse' }, { k: 'costoMob', n: 'Auto', g: 'fisse' }, { k: 'costoAbb', n: 'Abbonamenti', g: 'fisse' },
+    { k: 'tasse', n: 'Tasse', g: 'fisse' }, { k: 'gestioneConto', n: 'Gestione conto', g: 'fisse' }, { k: 'rateGeneriche', n: 'Rate generiche', g: 'fisse' },
+    { k: 'costoSoprav', n: 'Sopravvivenza', g: 'nec' },
+    { k: 'costoSvaghi', n: 'Svaghi', g: 'disc' }, { k: 'costoVacanze', n: 'Vacanze', g: 'disc' }, { k: 'costoSfizi', n: 'Sfizi', g: 'disc' }, { k: 'movimentiConto', n: 'Prelievi', g: 'disc' },
+  ];
+}
+function catChanges(yr) {
+  const V = D.val; if (!V) return null;
+  const i = V.years.indexOf(yr); if (i < 1) return null;
+  return vcats().map(c => { const a = V[c.k][i] || 0, b = V[c.k][i - 1] || 0; return { ...c, a, b, d: a - b, p: b > 0 ? a / b - 1 : null }; });
+}
+
+// Abbonamenti della carta: ultimi 12 mesi chiusi contro i 12 precedenti
+const ABB_ITEMS = [['msOffice', 'Microsoft Office'], ['disneyPlus', 'Disney Plus'], ['netflix', 'Netflix'], ['dazn', 'DAZN'], ['nowTv', 'NOW TV'], ['videogames', 'Videogames'],
+  ['spotify', 'Spotify'], ['internet', 'Internet'], ['telefono', 'Telefono'], ['amazonPrime', 'Amazon Prime'], ['impBollo', 'Imposta di bollo']];
+function abbChanges() {
+  if (!D.cartaMonthly) return null;
+  const n = ymNow(), ref = addMonths(n.y, n.m, -1), prevEnd = addMonths(ref.y, ref.m, -12);
+  const sum = (k, end) => { let s = 0; for (let j = 0; j < 12; j++) { const a = addMonths(end.y, end.m, -j), o = D.cartaMonthly[`${a.y}-${a.m}`]; if (o && o[k] > 0) s += o[k]; } return s; };
+  const rows = ABB_ITEMS.map(([k, name]) => ({ k, name, now: sum(k, ref), prev: sum(k, prevEnd) }));
+  if (!rows.some(r => r.prev > 0) || !rows.some(r => r.now > 0)) return null;
+  const nuovi = rows.filter(r => r.prev === 0 && r.now > 0);
+  const finiti = rows.filter(r => r.prev > 0 && r.now === 0);
+  const su = rows.filter(r => r.prev > 0 && r.now > 0 && r.now - r.prev >= 1 && r.now > r.prev * 1.03).sort((a, b) => (b.now - b.prev) - (a.now - a.prev));
+  const giu = rows.filter(r => r.prev > 0 && r.now > 0 && r.prev - r.now >= 1 && r.now < r.prev * 0.97);
+  return { ref, rows, nuovi, finiti, su, giu, totNow: rows.reduce((s, r) => s + r.now, 0), totPrev: rows.reduce((s, r) => s + r.prev, 0) };
+}
+
+// ══════════════════════════════════════════════════════
+//  HOME PAGE — testata del mese
 // ══════════════════════════════════════════════════════
 
 function renderHome() {
@@ -3754,90 +4002,148 @@ function renderHome() {
 }
 
 function buildHomeKPIs() {
-  const now = new Date();
-  const curYear  = now.getFullYear();
-  const curMonth = now.getMonth() + 1; // 1-based
+  const { y: curYear, m: curMonth } = ymNow();
+  const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  const alerts = [];   // { sev: 1-3, txt }
 
-  // ── 1. Saldo conto al mese corrente ──
-  // From saldoMonthly: find current month
-  const saldoEntry = D.saldoMonthly?.find(s => s.year === curYear && s.month === curMonth)
-    || D.saldoMonthly?.slice(-1)[0]; // fallback: last available
+  // ── 1. Saldo conto ──
+  const saldoEntry = D.saldoMonthly?.find(s => s.year === curYear && s.month === curMonth) || D.saldoMonthly?.slice(-1)[0];
   const saldoConto = saldoEntry?.saldo ?? 0;
   const saldoLabel = saldoEntry ? saldoEntry.label : '—';
+  let saldoVar = '';
+  if (saldoEntry) {
+    const pm = addMonths(saldoEntry.year, saldoEntry.month, -1), py = saldoEntry.year - 1;
+    const sPm = saldoOf(pm.y, pm.m), sPy = saldoOf(py, saldoEntry.month);
+    const line = (d, txt) => `<div class="hk-line"><span class="${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'} ${eurS(d)}</span> ${txt}</div>`;
+    if (sPm !== null) saldoVar += line(saldoConto - sPm, `rispetto a ${MESI[pm.m - 1].toLowerCase()} ${String(pm.y).slice(2)}`);
+    if (sPy !== null) saldoVar += line(saldoConto - sPy, `rispetto a ${MESI[saldoEntry.month - 1].toLowerCase()} ${String(py).slice(2)}`);
+  }
 
-  // ── 2. Spese carta di credito mese corrente ──
-  // From D.spesaCarta (summary text from BILANCIO row 3)
+  // ── 2. Risparmio del mese (entrate − uscite sul conto) ──
+  const mon = D.monthly || [];
+  const curM = mon.find(x => x.year === curYear && x.month === curMonth);
+  const refM = curM || mon[mon.length - 1];
+  let rispHtml = '<div class="home-kpi-sub">Dati mensili non disponibili.</div>', rispVal = '—', rispCol = 'var(--text)';
+  if (refM) {
+    const same = mon.filter(x => x.month === refM.month && x.year < refM.year && x.year >= 2021);
+    const avg = same.length ? same.reduce((s, x) => s + x.margine, 0) / same.length : null;
+    const ytdA = mon.filter(x => x.year === refM.year && x.month <= refM.month).reduce((s, x) => s + x.margine, 0);
+    const ytdB = mon.filter(x => x.year === refM.year - 1 && x.month <= refM.month).reduce((s, x) => s + x.margine, 0);
+    const hasPrevYear = mon.some(x => x.year === refM.year - 1);
+    rispVal = (refM.margine >= 0 ? '+' : '−') + euro(Math.abs(refM.margine)); rispCol = refM.margine >= 0 ? 'var(--green)' : 'var(--red)';
+    let opLine = '';
+    if (D.val) {
+      const vi = D.val.years.indexOf(refM.year);
+      if (vi >= 0) opLine = `<div class="hk-line">Media mensile ${refM.year}: <b>${euro(D.val.risparmioCom[vi])}</b> complessivo · <b>${euro(D.val.risparmioOp[vi])}</b> operativo <span style="color:var(--muted)">(senza straordinari)</span></div>`;
+    }
+    rispHtml = `<div class="home-kpi-sub">Entrate ${euro(refM.entrate)} · Uscite ${euro(refM.uscite)}</div>
+      ${avg !== null ? `<div class="hk-line"><span class="${refM.margine >= avg ? 'up' : 'dn'}">${refM.margine >= avg ? '▲' : '▼'} ${eurS(refM.margine - avg)}</span> rispetto alla media dei ${MESI_LONG_IT[refM.month - 1].toLowerCase()} passati (${eurS(avg)})</div>` : ''}
+      ${hasPrevYear ? `<div class="hk-line">Da gennaio (straordinari compresi): <b>${eurS(ytdA)}</b> <span style="color:var(--muted)">(stesso periodo ${refM.year - 1}: ${eurS(ytdB)})</span></div>` : ''}
+      ${opLine}`;
+    if (refM.margine < 0 && avg !== null && refM.margine < avg - 500)
+      alerts.push({ sev: 1, txt: `Il margine di ${MESI_LONG_IT[refM.month - 1].toLowerCase()} è ${eurS(refM.margine)}, sotto la media dei ${MESI_LONG_IT[refM.month - 1].toLowerCase()} passati (${eurS(avg)}).` });
+  }
+  const rispLbl = refM ? `Risparmio del mese — ${MESI_LONG_IT[refM.month - 1]}${curM ? '' : ' (ultimo disponibile)'}` : 'Risparmio del mese';
+
+  // ── 3. Spese carta ──
   const spesaCarta = D.spesaCarta || '—';
   const budgetRim  = D.budgetRimanente || null;
+  const parseEuro = str => parseFloat((str || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+  const spesaCartaNum = parseEuro(spesaCarta), budgetNum = parseEuro(budgetRim);
+  const totBudget = spesaCartaNum + budgetNum;
+  const pctUsato = totBudget > 0 ? (spesaCartaNum / totBudget * 100).toFixed(0) : 0;
+  const dim = new Date(curYear, curMonth, 0).getDate(), dayPct = Math.round(new Date().getDate() / dim * 100);
+  let cartaAvg = '';
+  {
+    const vals = [];
+    for (let j = 1; j <= 12; j++) { const a = addMonths(curYear, curMonth, -j), o = D.cartaMonthly && D.cartaMonthly[`${a.y}-${a.m}`]; if (o && o.addebito > 0) vals.push(o.addebito); }
+    if (vals.length >= 6) cartaAvg = `<div class="hk-line">Addebito medio della carta negli ultimi ${vals.length} mesi: <b>${euro(vals.reduce((s, v) => s + v, 0) / vals.length)}</b></div>`;
+  }
 
-  // ── 3. Bonifico conto cointestato mese corrente ──
-  // From D.coint.monthly: find current month, get _versamenti (negative = bonifico)
-  let bonifico = 0, bonificoLabel = '—';
-  if (D.coint?.monthly) {
-    const coinMonth = D.coint.monthly.find(m => m.year === curYear && m.month === curMonth)
-      || D.coint.monthly[0]; // fallback: most recent
-    if (coinMonth) {
-      bonifico = Math.abs(coinMonth._versamenti || 0);
-      const MESI = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-      bonificoLabel = `${MESI[coinMonth.month-1]} ${coinMonth.year}`;
+  // ── 4. Prossime uscite / saldo più basso ──
+  const ahead = saldoAhead(), soglia = getSoglia();
+  let aheadHtml = '';
+  if (ahead.min) {
+    aheadHtml += `<div class="hk-line">Il punto più basso del saldo è previsto a <b>${MESI_LONG_IT[ahead.min.m - 1].toLowerCase()} ${ahead.min.y}</b>${ahead.min.y === curYear && ahead.min.m === curMonth ? ' (cioè adesso)' : ''}.</div>`;
+    if (ahead.min.s < soglia) alerts.push({ sev: 3, txt: `Il saldo previsto scende a ${euro(ahead.min.s)} a ${MESI_LONG_IT[ahead.min.m - 1].toLowerCase()} ${ahead.min.y}, sotto la tua soglia di ${euro(soglia)}.` });
+  }
+  aheadHtml += ahead.drops.length
+    ? ahead.drops.map(d => `<div class="hk-line"><span class="dn">▼ ${euro(d.d)}</span> ${MESI_LONG_IT[d.m - 1].toLowerCase()} ${d.y} <span style="color:var(--muted)">(calo del saldo in quel mese)</span></div>`).join('')
+    : '<div class="hk-line"><span class="up">✓</span> Nessun calo importante del saldo previsto nei prossimi 12 mesi.</div>';
+
+  // ── Avvisi: categoria che sale, abbonamenti nuovi ──
+  const ch = D.val ? catChanges(curYear) : null;
+  if (ch) {
+    const up = ch.filter(c => c.d >= 30 && c.p !== null && c.p >= 0.3).sort((a, b) => b.d - a.d)[0];
+    if (up) alerts.push({ sev: 2, txt: `${up.n}: ${euro(up.a)}/mese nel ${curYear}, ${fP(up.p, 0)} rispetto al ${curYear - 1} (${eurS(up.d)} al mese).` });
+  }
+  const ac = abbChanges();
+  if (ac && ac.nuovi.length) alerts.push({ sev: 1, txt: `Abbonamenti nuovi negli ultimi 12 mesi: ${ac.nuovi.map(r => r.name).join(', ')}.` });
+
+  alerts.sort((a, b) => b.sev - a.sev);
+  const alEl = document.getElementById('home-alert');
+  if (alEl) {
+    if (!alerts.length) alEl.innerHTML = `<div class="halert ok">✅ <b>Tutto in linea.</b> Nessun avviso: saldo sopra la soglia di ${euro(soglia)}, nessuna categoria in forte aumento.</div>`;
+    else {
+      const top = alerts[0], rest = alerts.slice(1);
+      alEl.innerHTML = `<div class="halert ${top.sev >= 3 ? 'bad' : 'warn'}">${top.sev >= 3 ? '⚠️' : '👀'} <span>${top.txt}</span></div>` +
+        (rest.length ? `<details class="halert-more"><summary>Altri ${rest.length} avvisi</summary>${rest.map(a => `<div>• ${a.txt}</div>`).join('')}</details>` : '');
     }
   }
 
-  // ── 4. Saldo accumulato conto cointestato ──
-  // From D.coint.cumulativeData: last entry
+  // ── 5-6. Cointestato ──
+  let bonifico = 0, bonificoLabel = '—';
+  if (D.coint?.monthly) {
+    const coinMonth = D.coint.monthly.find(m => m.year === curYear && m.month === curMonth) || D.coint.monthly[0];
+    if (coinMonth) { bonifico = Math.abs(coinMonth._versamenti || 0); bonificoLabel = `${MESI[coinMonth.month - 1]} ${coinMonth.year}`; }
+  }
   let saldoCoint = 0, saldoCointLabel = '—';
   if (D.coint?.cumulativeData?.length) {
     const last = D.coint.cumulativeData[D.coint.cumulativeData.length - 1];
-    saldoCoint = last.cumulative;
-    saldoCointLabel = last.label;
-    // Find current month entry
+    saldoCoint = last.cumulative; saldoCointLabel = last.label;
     const curEntry = D.coint.cumulativeData.find(d => d.year === curYear && d.month === curMonth);
     if (curEntry) { saldoCoint = curEntry.cumulative; saldoCointLabel = curEntry.label; }
   }
-  // Invert: negative = surplus for cointestato
-  const saldoCointDisplay = Math.abs(saldoCoint);
-  const saldoCointIsSurplus = saldoCoint <= 0;
-
-  // Parse spesa carta numeric value
-  const parseEuro = str => parseFloat((str||'').replace(/[^\d,]/g,'').replace(',','.')) || 0;
-  const spesaCartaNum = parseEuro(spesaCarta);
-  const budgetNum = parseEuro(budgetRim);
-  const totBudget = spesaCartaNum + budgetNum;
-  const pctUsato = totBudget > 0 ? (spesaCartaNum / totBudget * 100).toFixed(0) : 0;
-
-  const MESI_LONG = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
-                     'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-  const meseCorrLong = MESI_LONG[curMonth-1];
+  const saldoCointDisplay = Math.abs(saldoCoint), saldoCointIsSurplus = saldoCoint <= 0;
+  const meseCorrLong = MESI_LONG_IT[curMonth - 1];
 
   document.getElementById('kpis-home').innerHTML = `
-    <!-- KPI 1: Saldo Conto -->
     <div class="home-kpi hc0">
       <span class="home-kpi-icon">🏦</span>
       <div class="home-kpi-lbl">Saldo Conto Corrente — ${saldoLabel}</div>
       <div class="home-kpi-val" style="color:var(--blue)">${euro(saldoConto)}</div>
-      <div class="home-kpi-sub">Saldo istantaneo del conto in banca</div>
-      <span class="home-kpi-badge ${saldoConto >= 0 ? 'pos' : 'neg'}">
-        ${saldoConto >= 0 ? '✅ Saldo positivo' : '⚠️ Saldo negativo'}
-      </span>
+      ${saldoVar || '<div class="home-kpi-sub">Saldo del conto in banca</div>'}
+      <span class="home-kpi-badge ${saldoConto >= 0 ? 'pos' : 'neg'}">${saldoConto >= 0 ? '✅ Saldo positivo' : '⚠️ Saldo negativo'}</span>
     </div>
 
-    <!-- KPI 2: Spese Carta -->
+    <div class="home-kpi hc2">
+      <span class="home-kpi-icon">💚</span>
+      <div class="home-kpi-lbl">${rispLbl}</div>
+      <div class="home-kpi-val" style="color:${rispCol}">${rispVal}</div>
+      ${rispHtml}
+    </div>
+
     <div class="home-kpi hc1">
       <span class="home-kpi-icon">💳</span>
       <div class="home-kpi-lbl">Spese Carta di Credito — ${meseCorrLong}</div>
       <div class="home-kpi-val" style="color:var(--orange)">${spesaCarta}</div>
-      <div class="home-kpi-sub">
-        Verranno addebitate il mese prossimo<br>
-        ${budgetRim ? `Budget rimasto: <strong>${budgetRim}</strong>` : ''}
-      </div>
+      <div class="home-kpi-sub">Verranno addebitate il mese prossimo${budgetRim ? `<br>Budget rimasto: <strong>${budgetRim}</strong>` : ''}</div>
       ${totBudget > 0 ? `
       <div style="margin-top:12px;background:rgba(255,255,255,.06);border-radius:8px;height:8px;overflow:hidden">
         <div style="width:${pctUsato}%;height:100%;background:linear-gradient(90deg,#f97316,#fb923c);border-radius:8px"></div>
       </div>
-      <span class="home-kpi-badge neg">${pctUsato}% del budget utilizzato</span>` : ''}
+      <span class="home-kpi-badge ${+pctUsato > dayPct + 15 ? 'neg' : 'neu'}">${pctUsato}% del budget usato · siamo al ${dayPct}% del mese</span>` : ''}
+      ${cartaAvg}
     </div>
 
-    <!-- KPI 3: Bonifico Cointestato -->
+    <div class="home-kpi hc3">
+      <span class="home-kpi-icon">🔭</span>
+      <div class="home-kpi-lbl">Saldo più basso nei prossimi 12 mesi</div>
+      <div class="home-kpi-val" style="color:${ahead.min && ahead.min.s < soglia ? 'var(--red)' : 'var(--text)'}">${ahead.min ? euro(ahead.min.s) : '—'}</div>
+      ${aheadHtml}
+      <div class="hk-line" style="margin-top:8px;color:var(--muted)">Soglia di allarme: ${euro(soglia)} (si cambia in Bilancio › Conto)</div>
+    </div>
+
     <div class="home-kpi hc2">
       <span class="home-kpi-icon">🏠</span>
       <div class="home-kpi-lbl">Bonifico Conto Cointestato — ${bonificoLabel}</div>
@@ -3846,21 +4152,15 @@ function buildHomeKPIs() {
       <span class="home-kpi-badge neu">💸 Uscita dal conto personale</span>
     </div>
 
-    <!-- KPI 4: Saldo Accumulato Cointestato -->
     <div class="home-kpi hc3">
       <span class="home-kpi-icon">📊</span>
       <div class="home-kpi-lbl">Saldo Accumulato Cointestato — ${saldoCointLabel}</div>
-      <div class="home-kpi-val" style="color:${saldoCointIsSurplus ? 'var(--green)' : 'var(--red)'}">
-        ${euro(saldoCointDisplay)}
-      </div>
+      <div class="home-kpi-val" style="color:${saldoCointIsSurplus ? 'var(--green)' : 'var(--red)'}">${euro(saldoCointDisplay)}</div>
       <div class="home-kpi-sub">Totale cumulativo versamenti vs spese</div>
-      <span class="home-kpi-badge ${saldoCointIsSurplus ? 'pos' : 'neg'}">
-        ${saldoCointIsSurplus ? '✅ Surplus — versato più di quanto speso' : '⚠️ Deficit — speso più di quanto versato'}
-      </span>
+      <span class="home-kpi-badge ${saldoCointIsSurplus ? 'pos' : 'neg'}">${saldoCointIsSurplus ? '✅ Surplus — versato più di quanto speso' : '⚠️ Deficit — speso più di quanto versato'}</span>
     </div>
   `;
 }
-
 
 // ══════════════════════════════════════════════════════
 //  MUTUO — calcoli finanziari e lettura del piano
