@@ -400,6 +400,17 @@ tr.rH{background:rgba(88,166,255,.03)}
 }
 @media(max-width:480px){ .sim-grid{grid-template-columns:1fr} }
 
+/* ── Pagina Gas & Energia: verdetti ── */
+.vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.vgrid .kpi-val{font-size:30px}
+.vgrid .vsent{font-size:11.5px;color:var(--text);margin-top:8px;line-height:1.45}
+.vhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}
+.vcomb{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;font-size:13px;line-height:1.55}
+.vcomb b{font-size:16px}
+.vnote{font-size:11px;color:var(--faint);line-height:1.5;margin:-14px 0 24px}
+.tcard td.up{color:var(--green)} .tcard td.dn{color:var(--red)}
+@media(max-width:700px){.vgrid{grid-template-columns:1fr}}
+
 /* PAGE TABS */
 .page-tabs{display:flex;gap:4px;margin-bottom:28px;border-bottom:1px solid var(--border);padding-bottom:0}
 .page-tab{
@@ -737,75 +748,46 @@ tr.rH{background:rgba(88,166,255,.03)}
 
   <div id="dash-ene" class="hidden">
 
-    <!-- Year filter -->
-    <div class="toolbar" id="pills-ene"></div>
+    <div class="vhead">
+      <div class="toolbar" id="pills-ene" style="margin:0"></div>
+      <span class="sec-note" id="ene-asof"></span>
+    </div>
 
-    <!-- KPI -->
-    <div class="kpi-grid" id="kpis-ene"></div>
+    <div class="vcomb" id="ene-comb"></div>
 
-    <!-- Trend costi bollette -->
+    <!-- Verdetti: pago di più o di meno? -->
+    <div class="vgrid" id="ene-verdicts"></div>
+    <div class="vnote" id="ene-vnote"></div>
+
+    <!-- Grafici -->
     <div class="cgrid">
       <div class="cc full">
-        <div class="cc-title">Importo Bollette Bimestrali — Gas 🔵 vs Energia ⚡ — periodo consumi indicato</div>
-        <canvas id="ch-ene-trend" style="max-height:220px"></canvas>
+        <div class="cc-title">Costo mese per mese — quest'anno contro gli anni scorsi</div>
+        <canvas id="ch-ene-months" style="max-height:260px"></canvas>
       </div>
     </div>
-
-    <!-- Totali annuali + composizione -->
     <div class="cgrid">
-      <div class="cc">
-        <div class="cc-title">Totale Annuale — Gas vs Energia Elettrica</div>
-        <canvas id="ch-ene-ann"></canvas>
-      </div>
-      <div class="cc">
-        <div class="cc-title">Composizione Bolletta Gas — <span id="gas-comp-yr">anno</span></div>
-        <canvas id="ch-gas-comp"></canvas>
+      <div class="cc full">
+        <div class="cc-title" id="ene-price-title">Prezzo della materia per unità — bolletta per bolletta</div>
+        <canvas id="ch-ene-price" style="max-height:260px"></canvas>
       </div>
     </div>
-
-    <!-- Consumi fisici -->
     <div class="cgrid">
-      <div class="cc">
-        <div class="cc-title">Consumo Gas per Bolletta (Smc) — mesi di riferimento</div>
-        <canvas id="ch-gas-smc"></canvas>
-      </div>
-      <div class="cc">
-        <div class="cc-title">Consumo Energia per Bolletta (kWh) — mesi di riferimento</div>
-        <canvas id="ch-ene-kw"></canvas>
+      <div class="cc full">
+        <div class="cc-title">Da cosa è fatta la bolletta — quanto dipende dal fornitore</div>
+        <canvas id="ch-ene-comp" style="max-height:260px"></canvas>
+        <div class="vnote" id="ene-comp-note" style="margin:10px 0 0"></div>
       </div>
     </div>
 
-    <!-- Prezzi unitari -->
-    <div class="cgrid">
-      <div class="cc">
-        <div class="cc-title">Prezzo Gas €/Smc per Anno</div>
-        <canvas id="ch-gas-price"></canvas>
-      </div>
-      <div class="cc">
-        <div class="cc-title">Prezzo Energia €/kWh per Anno</div>
-        <canvas id="ch-ene-price"></canvas>
-      </div>
-    </div>
-
-    <!-- Tabella bollette dettaglio -->
+    <!-- Tabelle -->
     <div class="sec">
-      <div class="sec-hd">
-        <span class="sec-title">📋 Storico Bollette — dettaglio bimestrale</span>
-        <span class="sec-note">Ogni riga = 1 bolletta bimestrale. "Periodo consumi" = i 2 mesi coperti dalla bolletta.</span>
-      </div>
-      <div class="tcard"><div class="tscroll"><table id="t-bills"></table></div></div>
+      <div class="sec-hd"><span class="sec-title">📅 Anno per anno</span><span class="sec-note" id="ene-year-note"></span></div>
+      <div class="tcard"><div class="tscroll"><table id="t-ene-years"></table></div></div>
     </div>
-
-    <!-- Tabelle annuali composizione -->
-    <div class="two">
-      <div class="sec">
-        <div class="sec-hd"><span class="sec-title">🔥 Composizione Bolletta Gas per Anno</span></div>
-        <div class="tcard"><div class="tscroll"><table id="t-gas"></table></div></div>
-      </div>
-      <div class="sec">
-        <div class="sec-hd"><span class="sec-title">⚡ Composizione Bolletta Energia per Anno</span></div>
-        <div class="tcard"><div class="tscroll"><table id="t-ene"></table></div></div>
-      </div>
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-title">🧾 Ultime bollette</span><span class="sec-note" id="ene-bills-note">Confronto con gli stessi mesi dell'anno scorso</span></div>
+      <div class="tcard"><div class="tscroll"><table id="t-ene-bills"></table></div></div>
     </div>
 
   </div><!-- /dash-ene -->
@@ -973,7 +955,7 @@ function expectLabel(raw, idx, kw, sheet, excelRow) {
   const ok = row.slice(0, 4).some(c => typeof c === 'string' && kws.some(k => c.toLowerCase().includes(k)));
   if (!ok) integWarn(`${sheet}: alla riga ${excelRow} mi aspettavo «${kws.join('» o «')}» ma non c'è. Hai inserito o spostato righe? I valori collegati potrebbero essere sbagliati.`);
 }
-const REQUIRED_SHEETS = ['BILANCIO','ANALISI CONSUMI GAS ENERGIA','SPESE COINTESTATO',
+const REQUIRED_SHEETS = ['BILANCIO','ENERGIA','SPESE COINTESTATO',
   'Analisi Spese Cointestato','Gestione finanziamenti','Valutazione Spese e Risparmi'];
 function checkSheets(wb) {
   const have = wb.SheetNames.map(n => n.trim().toLowerCase());
@@ -2800,488 +2782,289 @@ function switchPage(page) {
 }
 
 // ══════════════════════════════════════════════════════
-//  ENERGIA PARSER
-//  Structure (0-indexed rows, 0-indexed cols):
-//  Row 5  : date headers, col 11+ = monthly (Dec2020, Jan2021…)
-//  Row 16 : GAS  — importo bolletta bimestrale (at bill-receipt col)
-//  Row 26 : GAS  — Smc riportati in bolletta (at bill col)
-//  Row 33 : GAS  — costo mensile (val repeated at col & col+1 per bimester)
-//  Row 38 : GAS  — scarto mensile vs ipotetica
-//  Row 39 : GAS  — €/Smc reale (at bill col)
-//  Rows 6-14: GAS annual breakdown (cols 3-8 = 2021-2026)
-//  Row 49 : ENERGIA date headers (same as row 5)
-//  Row 59 : ENERGIA — importo bolletta bimestrale
-//  Row 70 : ENERGIA — kWh totale mensile (every month col)
-//  Row 71 : ENERGIA — kWh riportati in bolletta (at bill col)
-//  Row 74 : ENERGIA — costo mensile (repeated)
-//  Row 78 : ENERGIA — scarto vs ipotetica
-//  Row 80 : ENERGIA — €/kWh reale (at bill col)
-//  Rows 50-58: ENERGIA annual breakdown (cols 3-8)
-//  CONSUMPTION months for a bill at col C = date[C-2] and date[C-1]
+//  ENERGIA — legge il foglio «ENERGIA» e risponde a: pago di più o di meno?
 // ══════════════════════════════════════════════════════
-let SEL_ENE = 'all';
+let ENE_FORN = 'Luce';
+const ENE_META = { Luce:{unit:'kWh', ico:'⚡', col:'#f78166', col2:'#ffb199', col3:'#7d4a40'}, Gas:{unit:'Smc', ico:'🔥', col:'#58a6ff', col2:'#a5d0ff', col3:'#2f5d8f'} };
+const MESI_AB = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const fN = (v, d = 2) => (typeof v === 'number' && isFinite(v)) ? v.toFixed(d).replace('.', ',') : '—';
+const fP = (v, d = 1) => (typeof v === 'number' && isFinite(v)) ? (v >= 0 ? '+' : '−') + Math.abs(v * 100).toFixed(d).replace('.', ',') + '%' : '—';
+const eur2 = v => (typeof v === 'number' && isFinite(v)) ? v.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €' : '—';
 
 function parseEnergia(wb) {
-  const logs = [];
-  const log = (...a) => { const m=a.map(x=>typeof x==='object'?JSON.stringify(x):String(x)).join(' '); console.log(m); logs.push(m); };
-  const showDbg = () => { const el=document.getElementById('dbg-ene'); if(el){el.style.display='block';el.textContent=logs.join('\n');} };
-
-  // 1. Find sheet
-  const shName = wb.SheetNames.find(n => n === 'ANALISI CONSUMI GAS ENERGIA')
-    || wb.SheetNames.find(n => n.toUpperCase().includes('ANALISI CONSUMI'));
-  if (!shName) { log('❌ Sheet not found. Available:', wb.SheetNames.join(' | ')); showDbg(); return null; }
-  log('✅ Sheet:', shName);
-
-  // 2. Read sheet
-  // CRITICAL: Sheet min_row=2 (Excel row 1 is empty).
-  // XLSX.js sheet_to_json with header:1 outputs raw[0] = Excel row 2.
-  // So XLSX.js index = openpyxl index - 1 for ALL rows.
-  const raw = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header:1, defval:null, raw:true });
-  log('Rows:', raw.length);
-  if (raw.length < 15) { log('❌ Too few rows'); showDbg(); return null; }
-  [[5,'spese materia'],[15,'totale'],[25,'bolletta'],[32,'costo mensile'],[39,'rapporto'],
-   [49,'spese materia'],[58,'totale'],[69,'totale kw'],[70,'bolletta'],[73,'costo mensile'],[79,'rapporto']]
-    .forEach(([i, kw]) => expectLabel(raw, i, kw, 'ANALISI CONSUMI GAS ENERGIA', i + 2));
-
-  // 3. Helpers
-  const N = v => { if(v==null||v==='') return null; if(typeof v==='number') return v; if(v instanceof Date) return null; const p=parseFloat(v); return isNaN(p)?null:p; };
-  const EPOCH = new Date(Date.UTC(1899,11,30)).getTime();
-  const toDate = v => {
-    if(!v) return null;
-    if(v instanceof Date && !isNaN(v)) return v;
-    if(typeof v==='number' && v>35000 && v<90000) return new Date(EPOCH + v*86400000);
-    if(typeof v==='string'){ const d=new Date(v); if(!isNaN(d)) return d; }
-    return null;
+  const name = wb.SheetNames.find(n => n.trim().toLowerCase() === 'energia');
+  if (!name) return null;
+  const raw = XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, defval: null, raw: true });
+  const hdr = (raw[2] || []).map(h => typeof h === 'string' ? h.trim() : h);
+  const colOf = (label, last) => { let f = -1; hdr.forEach((h, i) => { if (h === label && (last || f < 0)) f = i; }); return f; };
+  const C = {
+    mese: colOf('Mese'), kwh: colOf('Luce kWh'), smc: colOf('Gas Smc (storico distributore)'), costL: colOf('Luce costo energia (€)'), costG: colOf('Gas costo (€)'),
+    forn: colOf('Fornitura'), oper: colOf('Operatore'), cons: colOf('Consumo fatturato (kWh / Smc)'), materia: colOf('Materia (consumi)'),
+    fissa: colOf('Quota fissa vendita / commercializzazione'), rete: colOf('Trasporto / rete'), oneri: colOf('Oneri (luce: rete + oneri)'),
+    sconti: colOf('Sconti / Bonus'), altro: colOf('Altro'), imposte: colOf('Imposte (accise)'), iva: colOf('IVA'), tot: colOf('Totale energia'),
+    canone: colOf('Canone TV', true), m0: colOf('Mese inizio (norm.)'), m1: colOf('Mese fine (norm.)'), n: colOf('Mesi di competenza'),
+    anno: colOf('Anno statistiche'), prezzo: colOf('Prezzo materia reale (€/unità)'), pc: colOf('Prezzo di contratto (€/kWh o €/Smc)')
   };
-
-  // 4. Annual years — XLSX.js idx 4 (= openpyxl idx 5 - 1), cols 3-8
-  const yearRow = raw[4] || [];
-  const annCols=[], annYears=[];
-  for(let c=3; c<=9; c++){
-    const v=yearRow[c];
-    if(typeof v==='number' && Number.isInteger(v) && v>=2015 && v<=2050){ annCols.push(c); annYears.push(v); }
+  const missing = Object.keys(C).filter(k => C[k] < 0);
+  if (missing.length) { integWarn(`Foglio ENERGIA: intestazioni non trovate (${missing.join(', ')}): la pagina Gas & Energia non può essere costruita.`); return null; }
+  const num = v => (typeof v === 'number' && isFinite(v)) ? v : null;
+  const months = [];
+  for (let r = 3; r < raw.length; r++) {
+    const ym = ymOf(raw[r][C.mese]); if (!ym) break;
+    months.push({ key: ym.y * 12 + ym.m, y: ym.y, m: ym.m, kwh: num(raw[r][C.kwh]), smc: num(raw[r][C.smc]), costL: num(raw[r][C.costL]) || 0, costG: num(raw[r][C.costG]) || 0 });
   }
-  log('annYears:', annYears, 'cols:', annCols);
-  if(annYears.length===0){ log('❌ No years. Row4:', JSON.stringify((raw[4]||[]).slice(0,12))); showDbg(); return null; }
-
-  const annArr = ri => { const r=raw[ri]||[]; return annCols.map(c=>N(r[c])??0); };
-
-  // 5. Annual data — all XLSX.js indices = openpyxl indices - 1
-  const gasSpesaMateria = annArr(5);   // openpyxl 6
-  const gasSconto       = annArr(8);   // openpyxl 9
-  const gasTrasporto    = annArr(9);   // openpyxl 10
-  const gasOneri        = annArr(10);  // openpyxl 11
-  const gasAltro        = annArr(11);  // openpyxl 12
-  const gasImposte      = annArr(12);  // openpyxl 13
-  const gasIva          = annArr(13);  // openpyxl 14
-  const gasTotale       = annArr(15);  // openpyxl 16
-  const gasSmc          = annArr(25);  // openpyxl 26
-  const gasMensile      = annArr(32);  // openpyxl 33
-  const gasEuroSmc      = annArr(39);  // openpyxl 40
-
-  const eneSpesaMateria = annArr(49);  // openpyxl 50
-  const eneSconto       = annArr(50);  // openpyxl 51
-  const eneTrasporto    = annArr(51);  // openpyxl 52
-  const eneOneri        = annArr(52);  // openpyxl 53
-  const eneAltro        = annArr(53);  // openpyxl 54
-  const eneImposte      = annArr(54);  // openpyxl 55
-  const eneIva          = annArr(55);  // openpyxl 56
-  const eneCanone       = annArr(57);  // openpyxl 58
-  const eneTotale       = annArr(58);  // openpyxl 59
-  const eneF1           = annArr(65);  // openpyxl 66
-  const eneF23          = annArr(68);  // openpyxl 69
-  const eneTotKw        = annArr(69);  // openpyxl 70
-  const eneMensile      = annArr(73);  // openpyxl 74
-  const eneEuroKwh      = annArr(79);  // openpyxl 80
-
-  log('gasTotale:', gasTotale);
-  log('eneTotale:', eneTotale);
-
-  // 6. Bill columns
-  // Date row = XLSX.js idx 4 (openpyxl idx 5), cols 11+ contain monthly dates.
-  // Bill amounts are ONLY at specific cols where row 15 (openpyxl 16) is non-null.
-  // These cols: N(13), P(15), R(17), T(19), V(21), W(22), X(23), Z(25), AB(27)...
-  const dateRow  = raw[4]  || [];  // openpyxl 5  → XLSX.js 4
-  const gasBollR = raw[15] || [];  // openpyxl 16 → XLSX.js 15
-  const gasSMCr  = raw[25] || [];  // openpyxl 26 → XLSX.js 25
-  const gasRatR  = raw[39] || [];  // openpyxl 40 → XLSX.js 39
-  const gasScarR = raw[37] || [];  // openpyxl 38 → XLSX.js 37
-  const eneBollR = raw[58] || [];  // openpyxl 59 → XLSX.js 58
-  const eneKwhR  = raw[70] || [];  // openpyxl 71 → XLSX.js 70
-  const eneRatR  = raw[79] || [];  // openpyxl 80 → XLSX.js 79
-  const eneScarR = raw[77] || [];  // openpyxl 78 → XLSX.js 77
-
-  // Find bill cols: non-null in gasBollR from col 13 onwards
-  const billCols = [];
-  const maxCol = Math.max(gasBollR.length||0, eneBollR.length||0, 200);
-  for(let c=13; c<maxCol; c++){
-    if(gasBollR[c]!=null || eneBollR[c]!=null) billCols.push(c);
-  }
-  log('Bill cols:', billCols.length, 'first:', billCols.slice(0,5));
-
-  const fmt = dt => dt ? dt.toLocaleDateString('it-IT',{month:'short',year:'numeric'}) : '—';
   const bills = [];
-
-  for(const c of billCols){
-    const d = toDate(dateRow[c]);
-    if(!d){ log('⚠️ No date at col', c, '=', JSON.stringify(dateRow[c])); continue; }
-    const yr = d.getFullYear();
-    if(yr < 2020 || yr > 2035) continue;
-
-    const dp2 = toDate(dateRow[c-2]);
-    const dp1 = toDate(dateRow[c-1]);
-    const consYear = dp1 ? dp1.getFullYear() : yr;
-
-    bills.push({
-      billLabel: fmt(d), billYear: yr, consYear,
-      period:    fmt(dp2) + ' — ' + fmt(dp1),
-      gasBoll:   N(gasBollR[c]), gasSmc:    N(gasSMCr[c]),
-      gasRatio:  N(gasRatR[c]),  gasScarto: N(gasScarR[c]),
-      eneBoll:   N(eneBollR[c]), eneKwh:    N(eneKwhR[c]),
-      eneRatio:  N(eneRatR[c]),  eneScarto: N(eneScarR[c]),
-    });
+  for (let r = 3; r < raw.length; r++) {
+    const row = raw[r], f = row[C.forn];
+    if (f !== 'Luce' && f !== 'Gas') continue;
+    const a = ymOf(row[C.m0]), b = ymOf(row[C.m1]), tot = num(row[C.tot]);
+    if (!a || !b || tot === null) continue;
+    bills.push({ forn: f, oper: String(row[C.oper] || '').trim(), k0: a.y * 12 + a.m, k1: b.y * 12 + b.m, y0: a.y, m0: a.m, y1: b.y, m1: b.m,
+      n: num(row[C.n]) || 1, cons: num(row[C.cons]), materia: num(row[C.materia]) || 0, fissa: num(row[C.fissa]) || 0, rete: num(row[C.rete]) || 0, oneri: num(row[C.oneri]) || 0,
+      sconti: num(row[C.sconti]) || 0, altro: num(row[C.altro]) || 0, imposte: num(row[C.imposte]) || 0, iva: num(row[C.iva]) || 0, tot, canone: num(row[C.canone]) || 0,
+      anno: num(row[C.anno]) || b.y, prezzo: num(row[C.prezzo]), pc: num(row[C.pc]) });
   }
-
-  log('✅ Bills:', bills.length, bills[0] ? JSON.stringify(bills[0]) : 'NONE');
-  showDbg();
-
-  const billYears = [...new Set(bills.map(b=>b.consYear))].sort();
-  return {
-    annYears, gasTotale, gasMensile, gasSmc, gasEuroSmc,
-    gasSpesaMateria, gasSconto, gasTrasporto, gasOneri, gasAltro, gasImposte, gasIva,
-    eneTotale, eneMensile, eneTotKw, eneEuroKwh, eneF1, eneF23,
-    eneSpesaMateria, eneSconto, eneTrasporto, eneOneri, eneAltro, eneImposte, eneIva, eneCanone,
-    bills, billYears,
-  };
+  bills.sort((x, y) => x.k0 - y.k0 || (x.forn < y.forn ? -1 : 1));
+  return { months, bills };
 }
 
+// ── calcoli ──
+function eneWin(S, k1, k2) {
+  let cost = 0, cons = 0, n = 0;
+  S.forEach(p => { if (p.key >= k1 && p.key <= k2 && p.cost > 0 && p.cons > 0) { cost += p.cost; cons += p.cons; n++; } });
+  return n ? { cost, cons, n, cm: cost / n, km: cons / n, unit: cost / cons } : null;
+}
+function eneCompare(a, b) {
+  if (!a || !b) return null;
+  return { a, b, dCost: a.cm / b.cm - 1, dCons: a.km / b.km - 1, dUnit: a.unit / b.unit - 1 };
+}
+function eneGroup(bs) {
+  const withCons = bs.filter(b => b.cons > 0);
+  const sC = withCons.reduce((s, b) => s + b.cons, 0), sM = withCons.reduce((s, b) => s + b.materia, 0), sT = withCons.reduce((s, b) => s + b.tot, 0);
+  const n = bs.reduce((s, b) => s + b.n, 0), sF = bs.reduce((s, b) => s + b.fissa, 0);
+  return { n, bills: bs.length, price: sC ? sM / sC : null, unit: sC ? sT / sC : null, fissaM: n ? sF / n : null, cons: sC };
+}
+function eneCompute(E, forn) {
+  const S = E.months.map(m => ({ key: m.key, y: m.y, m: m.m, cons: forn === 'Luce' ? m.kwh : m.smc, cost: forn === 'Luce' ? m.costL : m.costG }));
+  const bills = E.bills.filter(b => b.forn === forn);
+  const wc = S.filter(p => p.cost > 0);
+  const anchor = wc.length ? wc[wc.length - 1].key : null;
+  const w = (a, b) => eneWin(S, a, b);
+  const X = { forn, S, bills, anchor };
+  if (anchor !== null) {
+    X.c3 = eneCompare(w(anchor - 2, anchor), w(anchor - 14, anchor - 12));
+    X.c12 = eneCompare(w(anchor - 11, anchor), w(anchor - 23, anchor - 12));
+    X.last12 = w(anchor - 11, anchor);
+  }
+  // cambio di contratto: operatore dell'ultima bolletta (se noto) contro le bollette precedenti
+  const last = bills[bills.length - 1];
+  if (last && last.oper && last.oper !== 'n.d.') {
+    const cur = bills.filter(b => b.oper === last.oper);
+    const start = Math.min(...cur.map(b => b.k0));
+    const prev = bills.filter(b => b.oper !== last.oper && b.k1 < start && b.k1 >= start - 12);
+    X.curSet = new Set(cur);
+    if (cur.length && prev.length) X.contract = { oper: last.oper, start, cur: eneGroup(cur), prev: eneGroup(prev), prevOper: ([...new Set(prev.map(b => b.oper))].filter(o => o && o !== 'n.d.').join(' / ') || 'fornitore precedente') };
+  }
+  return X;
+}
+function eneSentence(c, unit) {
+  if (!c) return '';
+  const near = Math.abs(c.dCost) < 0.02;
+  if (near) return 'Spesa in linea con il periodo di confronto.';
+  if (c.dCost < 0) {
+    if (c.dCons > 0.02) return `Paghi meno anche consumando di più: il costo per ${unit} è sceso.`;
+    if (c.dUnit < -0.02) return `Paghi meno: consumi e costo per ${unit} sono in calo.`;
+    return 'Paghi meno perché consumi meno; il costo per ' + unit + ' è simile.';
+  }
+  if (c.dCons < -0.02 && c.dUnit > 0.02) return `Paghi di più pur consumando meno: pesano le quote fisse, il trasporto e le tasse, che non dipendono dai consumi.`;
+  if (c.dUnit <= 0.02) return `Paghi di più solo perché consumi di più: il costo per ${unit} non è aumentato.`;
+  return c.dCons > 0.02 ? `Paghi di più: consumi di più e il costo per ${unit} è aumentato.` : `Paghi di più: il costo per ${unit} è aumentato.`;
+}
+function monthLabel(k) { return `${MESI_AB[k % 12]} ${String(Math.floor(k / 12)).slice(2)}`; }
+function periodLabel(b) { return b.k0 === b.k1 ? monthLabel(b.k0) : `${MESI_AB[b.k0 % 12]}–${monthLabel(b.k1)}`; }
 
-// ══════════════════════════════════════════════════════
-//  RENDER ENERGIA PAGE
-// ══════════════════════════════════════════════════════
+// ── pagina ──
 function renderEnergia() {
   const E = D ? D.energia : null;
-
+  const emptyEl = document.getElementById('empty-ene');
   if (!E) {
-    // Show diagnostic message with details about what went wrong
-    const emptyEl = document.getElementById('empty-ene');
-    emptyEl.classList.remove('hidden');
-    document.getElementById('dash-ene').classList.add('hidden');
-
-    if (D) {
-      // File was loaded but energia parsing failed — show diagnostic
-      const sheetList = D._sheetNames ? D._sheetNames.join(', ') : 'N/D';
-      emptyEl.innerHTML = `
-        <div class="empty-ic">⚠️</div>
-        <h2>Foglio non trovato</h2>
-        <p>Il foglio <strong>"ANALISI CONSUMI GAS ENERGIA"</strong> non è stato trovato nel file.<br><br>
-        Fogli presenti nel file:<br><span style="font-size:11px;color:var(--muted)">${sheetList}</span></p>`;
-    }
+    emptyEl.classList.remove('hidden'); document.getElementById('dash-ene').classList.add('hidden');
+    if (D) emptyEl.innerHTML = `<div class="empty-ic">⚠️</div><h2>Foglio ENERGIA non letto</h2><p>Nel file non trovo il foglio <strong>ENERGIA</strong> (o ne mancano delle colonne): guarda l'avviso in alto.</p>`;
     return;
   }
-
-  document.getElementById('empty-ene').classList.add('hidden');
-  document.getElementById('dash-ene').classList.remove('hidden');
-  const dbgEne = document.getElementById('dbg-ene');
-  if (dbgEne) dbgEne.style.display = 'none';
-
-  buildPillsEne(E);
-  buildKPIEne(E);
-  buildChartEneTrend(E);
-  buildChartEneAnn(E);
-  buildChartGasComp(E);
-  buildChartGasSmc(E);
-  buildChartEneKw(E);
-  buildChartGasPrice(E);
-  buildChartEnePrice(E);
-  buildTableBills(E);
-  buildTableGas(E);
-  buildTableEne(E);
+  emptyEl.classList.add('hidden'); document.getElementById('dash-ene').classList.remove('hidden');
+  const X = eneCompute(E, ENE_FORN);
+  buildPillsEne();
+  buildVerdictsEne(E, X);
+  buildChartEneMonths(X);
+  buildChartEnePrice(X);
+  buildChartEneComp(X);
+  buildTablesEne(X);
 }
-
-function buildPillsEne(E) {
+function buildPillsEne() {
   const c = document.getElementById('pills-ene');
-  c.innerHTML = '<span class="tb-label">Anno</span>';
-  const add = (lbl, val) => {
+  c.innerHTML = '';
+  ['Luce', 'Gas'].forEach(f => {
     const b = document.createElement('button');
-    b.className = 'pill' + (val === SEL_ENE ? ' on' : '');
-    b.textContent = lbl;
-    b.onclick = () => { SEL_ENE = val; renderEnergia(); };
+    b.className = 'pill' + (f === ENE_FORN ? ' on' : ''); b.textContent = `${ENE_META[f].ico} ${f}`;
+    b.onclick = () => { ENE_FORN = f; renderEnergia(); };
     c.appendChild(b);
-  };
-  add('Tutti', 'all');
-  E.billYears.forEach(y => add(y, y));
+  });
 }
-
-function filteredBills(E) {
-  return SEL_ENE === 'all' ? E.bills : E.bills.filter(b => b.consYear === SEL_ENE);
+function verdictCard(lbl, c, unit, cls) {
+  if (!c) return `<div class="kpi ${cls}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val neu">—</div><div class="kpi-sub">Dati insufficienti per il confronto (servono bollette anche dell'anno prima).</div></div>`;
+  const good = c.dCost < 0;
+  return `<div class="kpi ${cls}"><div class="kpi-lbl">${lbl}</div>
+    <div class="kpi-val ${Math.abs(c.dCost) < 0.02 ? 'neu' : good ? 'pos' : 'neg'}">${c.dCost < 0 ? '▼' : '▲'} ${fP(c.dCost)}</div>
+    <div class="kpi-sub">${eur2(c.a.cm)} al mese (prima ${eur2(c.b.cm)})</div>
+    <div class="kpi-trend ${c.dUnit <= 0 ? 'up' : 'dn'}">consumi ${fP(c.dCons)} · costo per ${unit} ${fP(c.dUnit)}</div>
+    <div class="vsent">${eneSentence(c, unit)}</div></div>`;
 }
-
-function buildKPIEne(E) {
-  const li = E.annYears.length - 1;
-  const pi = li - 1;
-  const yr = SEL_ENE === 'all' ? E.annYears[li] : SEL_ENE;
-  const ai = E.annYears.indexOf(yr);
-  const ap = ai - 1;
-
-  const gTot = ai >= 0 ? E.gasTotale[ai] : 0;
-  const eTot = ai >= 0 ? E.eneTotale[ai] : 0;
-  const gPrev = ap >= 0 ? E.gasTotale[ap] : null;
-  const ePrev = ap >= 0 ? E.eneTotale[ap] : null;
-  const smc   = ai >= 0 ? E.gasSmc[ai] : 0;
-  const kwh   = ai >= 0 ? E.eneTotKw[ai] : 0;
-  const gM    = ai >= 0 ? E.gasMensile[ai] : 0;
-  const eM    = ai >= 0 ? E.eneMensile[ai] : 0;
-
-  function td(curr, prev) {
-    if (!prev) return '';
-    const d = ((curr-prev)/Math.abs(prev)*100);
-    return `<div class="kpi-trend ${d<=0?'up':'dn'}">${d<=0?'▼':'▲'} ${Math.abs(d).toFixed(1)}% vs anno prec.</div>`;
+function buildVerdictsEne(E, X) {
+  const unit = ENE_META[X.forn].unit, nm = X.forn === 'Luce' ? 'luce' : 'gas';
+  document.getElementById('ene-asof').textContent = X.anchor !== null ? `Dati fino a ${monthLabel(X.anchor)}` : '';
+  // riepilogo luce + gas (ultimi 12 mesi)
+  const XL = eneCompute(E, 'Luce'), XG = eneCompute(E, 'Gas');
+  const cm = (x, k) => x[k] ? x[k].a.cm : null;
+  let comb = '<span style="color:var(--muted)">Luce + Gas: non ci sono ancora dati sufficienti per il confronto sugli ultimi 12 mesi.</span>';
+  if (XL.c12 && XG.c12) {
+    const a = XL.c12.a.cm + XG.c12.a.cm, b = XL.c12.b.cm + XG.c12.b.cm, d = a / b - 1;
+    comb = `<b>Luce + Gas, ultimi 12 mesi:</b> ${eur2(a)} al mese contro ${eur2(b)} dei 12 mesi prima — <b class="${d <= 0 ? 'kpi-trend up' : 'kpi-trend dn'}" style="display:inline;font-size:inherit">${d <= 0 ? '▼' : '▲'} ${fP(d)}</b> (luce ${fP(XL.c12.dCost)}, gas ${fP(XG.c12.dCost)}).`;
   }
-
-  document.getElementById('kpis-ene').innerHTML = [
-    {lbl:`🔥 Totale Gas ${yr}`,    val:euro(gTot), cls:'blu', sub:`Media mensile ${euro(gM)}`,  tr:td(gTot,gPrev), c:'c0'},
-    {lbl:`⚡ Totale Energia ${yr}`, val:euro(eTot), cls:'ora', sub:`Media mensile ${euro(eM)}`,  tr:td(eTot,ePrev), c:'c2'},
-    {lbl:`💡 Totale Combinato ${yr}`,val:euro(gTot+eTot),cls:'neu',sub:`Mensile medio ${euro((gTot+eTot)/12)}`,tr:'',c:'c3'},
-    {lbl:`📏 Consumo Gas ${yr}`,    val:`${smc} Smc`, cls:'blu',sub:`≈ ${Math.round(smc/12)} Smc/mese`,tr:'',c:'c1'},
-    {lbl:`🔌 Consumo Elettrico ${yr}`,val:`${kwh} kWh`,cls:'ora',sub:`≈ ${Math.round(kwh/12)} kWh/mese`,tr:'',c:'c4'},
-  ].map(k=>`<div class="kpi ${k.c}">
-    <div class="kpi-lbl">${k.lbl}</div>
-    <div class="kpi-val ${k.cls}">${k.val}</div>
-    <div class="kpi-sub">${k.sub}</div>${k.tr}
-  </div>`).join('');
-}
-
-function buildChartEneTrend(E) {
-  kill('enet');
-  const bills = filteredBills(E);
-  CH.enet = new Chart(document.getElementById('ch-ene-trend'), {
-    type:'line',
-    data:{ labels: bills.map(b => isMobile ? b.billLabel : b.period),
-      datasets:[
-        {label:'Gas (€)', data:bills.map(b=>b.gasBoll), borderColor:'#3B82F6', backgroundColor:'rgba(59,130,246,.07)', tension:.3, borderWidth:2.5, pointRadius:3, spanGaps:true},
-        {label:'Energia (€)', data:bills.map(b=>b.eneBoll), borderColor:'#EAB308', backgroundColor:'rgba(234,179,8,.07)', tension:.3, borderWidth:2.5, pointRadius:3, spanGaps:true},
-      ]},
-    options:{ ...COPTS, interaction:{mode:'index',intersect:false},
-      plugins:{...COPTS.plugins,
-        tooltip:{callbacks:{
-          title: t => `Bolletta: ${bills[t[0].dataIndex]?.billLabel} (consumi: ${bills[t[0].dataIndex]?.period})`,
-          label: c=>` ${c.dataset.label}: ${euro(c.raw)}`
-        }}
-      },
-      scales:{...COPTS.scales,
-        x:{...COPTS.scales.x, ticks:{...COPTS.scales.x.ticks, maxTicksLimit:12, maxRotation:35}}
-      }
+  document.getElementById('ene-comb').innerHTML = comb;
+  // tre verdetti
+  let third;
+  const ct = X.contract;
+  if (ct) {
+    const dp = ct.cur.price / ct.prev.price - 1, df = ct.cur.fissaM - ct.prev.fissaM;
+    let sav = '';
+    if (X.last12) {
+      const yr = X.last12.km * 12, s = (ct.prev.price - ct.cur.price) * yr + (ct.prev.fissaM - ct.cur.fissaM) * 12;
+      sav = `Stima su 12 mesi di consumi: ${s >= 0 ? '' : '+'}${eur2(Math.abs(s))} ${s >= 0 ? 'in meno' : 'in più'} tra materia e quota fissa, IVA esclusa.`;
     }
-  });
+    third = `<div class="kpi c3"><div class="kpi-lbl">Contratto attuale (${ct.oper}) vs precedente</div>
+      <div class="kpi-val ${Math.abs(dp) < 0.02 ? 'neu' : dp < 0 ? 'pos' : 'neg'}">${dp < 0 ? '▼' : '▲'} ${fP(dp)}</div>
+      <div class="kpi-sub">Prezzo materia ${fN(ct.cur.price, 4)} contro ${fN(ct.prev.price, 4)} €/${unit}</div>
+      <div class="kpi-trend ${df <= 0 ? 'up' : 'dn'}">quota fissa ${fN(ct.cur.fissaM)} contro ${fN(ct.prev.fissaM)} €/mese</div>
+      <div class="vsent">${sav}<br><span style="color:var(--muted)">Basato su ${ct.cur.bills} bolletta/e del nuovo contratto e ${ct.prev.bills} dei 12 mesi prima (${ct.prevOper}).</span></div></div>`;
+  } else {
+    const b12 = X.bills.filter(b => b.cons > 0), last = X.anchor;
+    const cur = eneGroup(b12.filter(b => b.k1 > last - 12 && b.k1 <= last)), prv = eneGroup(b12.filter(b => b.k1 > last - 24 && b.k1 <= last - 12));
+    if (cur.price && prv.price) {
+      const dp = cur.price / prv.price - 1;
+      third = `<div class="kpi c3"><div class="kpi-lbl">Prezzo della materia vs 12 mesi prima</div>
+        <div class="kpi-val ${Math.abs(dp) < 0.02 ? 'neu' : dp < 0 ? 'pos' : 'neg'}">${dp < 0 ? '▼' : '▲'} ${fP(dp)}</div>
+        <div class="kpi-sub">${fN(cur.price, 4)} contro ${fN(prv.price, 4)} €/${unit}</div>
+        <div class="vsent">Nessun cambio di fornitore registrato per il ${nm}: quando inserirai le bollette del nuovo contratto qui comparirà il confronto con il precedente.</div></div>`;
+    } else third = verdictCard('Contratto attuale vs precedente', null, unit, 'c3');
+  }
+  document.getElementById('ene-verdicts').innerHTML =
+    verdictCard('Ultimi 3 mesi vs stessi mesi anno scorso', X.c3, unit, 'c0') +
+    verdictCard('Ultimi 12 mesi vs 12 mesi prima', X.c12, unit, 'c2') + third;
+  document.getElementById('ene-vnote').textContent =
+    `«Costo per ${unit}» = spesa totale della bolletta (senza canone TV) divisa per i consumi: comprende anche quota fissa, trasporto e tasse. ` +
+    'Confronti sullo stesso periodo di un anno prima, così l\'inverno non si confronta con l\'estate.';
 }
 
-function buildChartEneAnn(E) {
-  kill('enea');
-  const yrs = SEL_ENE === 'all' ? E.annYears : [SEL_ENE];
-  const gi = yrs.map(y => E.annYears.indexOf(y));
-  CH.enea = new Chart(document.getElementById('ch-ene-ann'), {
-    type:'bar',
-    data:{ labels:yrs.map(String), datasets:[
-      {label:'Gas', data:gi.map(i=>i>=0?E.gasTotale[i]:0), backgroundColor:'rgba(59,130,246,.8)', borderRadius:4, borderWidth:0},
-      {label:'Energia', data:gi.map(i=>i>=0?E.eneTotale[i]:0), backgroundColor:'rgba(234,179,8,.8)', borderRadius:4, borderWidth:0},
-    ]},
-    options:{...COPTS, plugins:{...COPTS.plugins, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${euro(c.raw)}`}}}}
-  });
+function eneOpts(yfmt, extra) {
+  const o = {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { labels: { color: '#8b949e', font: { family: 'DM Sans', size: isMobile ? 10 : 11 }, boxWidth: 10, padding: isMobile ? 8 : 14 } } },
+    scales: { x: { ...COPTS.scales.x }, y: { ...COPTS.scales.y, ticks: { ...COPTS.scales.y.ticks, callback: yfmt } } }
+  };
+  return Object.assign(o, extra || {});
 }
-
-function buildChartGasComp(E) {
-  kill('gasc');
-  const yr = SEL_ENE === 'all' ? E.annYears[E.annYears.length-1] : SEL_ENE;
-  document.getElementById('gas-comp-yr').textContent = yr;
-  const i = E.annYears.indexOf(yr); if(i<0) return;
-  const items = [
-    ['Spesa Materia', E.gasSpesaMateria[i]],
-    ['Trasporto',     E.gasTrasporto[i]],
-    ['Imposte',       E.gasImposte[i]],
-    ['IVA',           E.gasIva[i]],
-    ['Oneri',         Math.max(0, E.gasOneri[i])],
-    ['Altro/Voltura', Math.max(0, E.gasAltro[i])],
-    ['Sconto (↓)',    Math.abs(E.gasSconto[i])],
-  ].filter(x=>x[1]>0);
-  CH.gasc = new Chart(document.getElementById('ch-gas-comp'), {
-    type:'doughnut',
-    data:{ labels:items.map(x=>x[0]), datasets:[{data:items.map(x=>x[1]),
-      backgroundColor:['#3B82F6','#06B6D4','#F97316','#EAB308','#A855F7','#84CC16','#6B7280'],
-      borderWidth:2, borderColor:'#161b22'}]},
-    options:{responsive:true, maintainAspectRatio:true, plugins:{
-      legend:{position:'right', labels:{color:'#8b949e',font:{family:'DM Sans',size:10},boxWidth:10,padding:8}},
-      tooltip:{callbacks:{label:c=>` ${c.label}: ${euro(c.raw)}`}}}}
-  });
+function buildChartEneMonths(X) {
+  kill('enem');
+  const meta = ENE_META[X.forn];
+  if (X.anchor === null) return;
+  const yrs = [...new Set(X.S.filter(p => p.cost > 0).map(p => p.y))].sort((a, b) => b - a).slice(0, 3);
+  const cols = [meta.col, '#8b949e', meta.col3];
+  const sets = yrs.map((y, i) => ({
+    label: String(y), borderColor: cols[i], backgroundColor: cols[i], borderWidth: i === 0 ? 3 : 2, tension: .3,
+    borderDash: i === 2 ? [4, 4] : [], pointRadius: i === 0 ? 4 : 3, spanGaps: false,
+    data: MESI_AB.map((_, mi) => { const p = X.S.find(s => s.y === y && s.m === mi); return p && p.cost > 0 ? p.cost : null; })
+  }));
+  const o = eneOpts(v => euro(v, true));
+  o.plugins.tooltip = { callbacks: { label: c => `${c.dataset.label}: ${eur2(c.parsed.y)}` } };
+  CH.enem = new Chart(document.getElementById('ch-ene-months'), { type: 'line', data: { labels: MESI_AB, datasets: sets }, options: o });
 }
-
-function buildChartGasSmc(E) {
-  kill('gsmc');
-  const bills = filteredBills(E).filter(b=>b.gasSmc!==null);
-  CH.gsmc = new Chart(document.getElementById('ch-gas-smc'), {
-    type:'bar',
-    data:{ labels:bills.map(b=>b.period),
-      datasets:[{label:'Smc', data:bills.map(b=>b.gasSmc),
-        backgroundColor:'rgba(59,130,246,.75)', borderRadius:3, borderWidth:0}]},
-    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
-      tooltip:{callbacks:{title:t=>`Bolletta ${bills[t[0].dataIndex]?.billLabel}`,label:c=>` Consumi: ${c.raw} Smc`}}},
-      scales:{...COPTS.scales,
-        x:{...COPTS.scales.x, ticks:{...COPTS.scales.x.ticks, maxTicksLimit:12, maxRotation:35}},
-        y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+' Smc'}}}}
-  });
+function buildChartEnePrice(X) {
+  kill('enep');
+  const meta = ENE_META[X.forn], unit = meta.unit;
+  document.getElementById('ene-price-title').textContent = `Prezzo della materia per ${unit} (€/${unit}) — bolletta per bolletta`;
+  const bs = X.bills.filter(b => b.prezzo > 0 && b.prezzo < 3);
+  if (!bs.length) return;
+  const isCur = b => X.curSet && X.curSet.has(b);
+  const sets = [];
+  if (X.curSet) {
+    sets.push({ label: 'Contratto precedente', data: bs.map(b => isCur(b) ? null : b.prezzo), borderColor: '#8b949e', backgroundColor: '#8b949e', borderWidth: 2, tension: .25, pointRadius: 3, spanGaps: false });
+    sets.push({ label: 'Contratto attuale', data: bs.map(b => isCur(b) ? b.prezzo : null), borderColor: meta.col, backgroundColor: meta.col, borderWidth: 3, tension: .25, pointRadius: 6, spanGaps: false });
+  } else sets.push({ label: 'Prezzo reale', data: bs.map(b => b.prezzo), borderColor: meta.col, backgroundColor: meta.col, borderWidth: 2, tension: .25, pointRadius: 3 });
+  const known = X.curSet && bs.some(b => isCur(b) && b.pc > 0);
+  if (known) sets.push({ label: 'Prezzo di contratto', data: bs.map(b => (isCur(b) && b.pc > 0) ? b.pc : null), borderColor: meta.col2, borderDash: [6, 4], borderWidth: 2, pointRadius: 4, pointStyle: 'rectRot', spanGaps: false, backgroundColor: meta.col2 });
+  const o = eneOpts(v => fN(v, 2));
+  o.plugins.tooltip = { callbacks: { label: c => c.parsed.y == null ? '' : `${c.dataset.label}: ${fN(c.parsed.y, 4)} €/${unit}` } };
+  CH.enep = new Chart(document.getElementById('ch-ene-price'), { type: 'line', data: { labels: bs.map(b => isMobile ? monthLabel(b.k1) : periodLabel(b)), datasets: sets }, options: o });
 }
-
-function buildChartEneKw(E) {
-  kill('enkw');
-  const bills = filteredBills(E).filter(b=>b.eneKwh!==null);
-  CH.enkw = new Chart(document.getElementById('ch-ene-kw'), {
-    type:'bar',
-    data:{ labels:bills.map(b=>b.period),
-      datasets:[{label:'kWh', data:bills.map(b=>b.eneKwh),
-        backgroundColor:'rgba(234,179,8,.75)', borderRadius:3, borderWidth:0}]},
-    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
-      tooltip:{callbacks:{title:t=>`Bolletta ${bills[t[0].dataIndex]?.billLabel}`,label:c=>` Consumi: ${c.raw} kWh`}}},
-      scales:{...COPTS.scales,
-        x:{...COPTS.scales.x, ticks:{...COPTS.scales.x.ticks, maxTicksLimit:12, maxRotation:35}},
-        y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+' kWh'}}}}
-  });
-}
-
-function buildChartGasPrice(E) {
-  kill('gpr');
-  const yrs = SEL_ENE === 'all' ? E.annYears : [SEL_ENE];
-  const gi  = yrs.map(y => E.annYears.indexOf(y));
-  CH.gpr = new Chart(document.getElementById('ch-gas-price'), {
-    type:'line',
-    data:{ labels:yrs.map(String), datasets:[{label:'€/Smc',
-      data:gi.map(i=>i>=0?parseFloat(E.gasEuroSmc[i].toFixed(4)):null),
-      borderColor:'#3B82F6', backgroundColor:'rgba(59,130,246,.1)',
-      fill:true, tension:.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#3B82F6'}]},
-    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
-      tooltip:{callbacks:{label:c=>` ${c.raw} €/Smc`}}},
-      scales:{...COPTS.scales, y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+'€'}}}}
-  });
-}
-
-function buildChartEnePrice(E) {
-  kill('epr');
-  const yrs = SEL_ENE === 'all' ? E.annYears : [SEL_ENE];
-  const gi  = yrs.map(y => E.annYears.indexOf(y));
-  CH.epr = new Chart(document.getElementById('ch-ene-price'), {
-    type:'line',
-    data:{ labels:yrs.map(String), datasets:[{label:'€/kWh',
-      data:gi.map(i=>i>=0?parseFloat(E.eneEuroKwh[i].toFixed(4)):null),
-      borderColor:'#EAB308', backgroundColor:'rgba(234,179,8,.1)',
-      fill:true, tension:.4, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#EAB308'}]},
-    options:{...COPTS, plugins:{...COPTS.plugins, legend:{display:false},
-      tooltip:{callbacks:{label:c=>` ${c.raw} €/kWh`}}},
-      scales:{...COPTS.scales, y:{...COPTS.scales.y, ticks:{...COPTS.scales.y.ticks, callback:v=>v+'€'}}}}
-  });
-}
-
-function buildTableBills(E) {
-  const bills = filteredBills(E);
-  let h = `<thead><tr>
-    <th style="text-align:left">Bolletta</th>
-    <th style="text-align:left">Periodo Consumi</th>
-    <th>€ Gas</th><th>Smc</th><th>€/Smc</th><th>Scarto Gas</th>
-    <th>€ Energia</th><th>kWh</th><th>€/kWh</th><th>Scarto Luce</th>
-    <th>Totale</th>
-  </tr></thead><tbody>`;
+function eneByYear(bills) {
+  const Y = {};
   bills.forEach(b => {
-    const tot = (b.gasBoll||0) + (b.eneBoll||0);
-    const gsc = b.gasScarto, esc = b.eneScarto;
-    h += `<tr>
-      <td style="text-align:left;color:var(--muted)">${b.billLabel}</td>
-      <td style="text-align:left">${b.period}</td>
-      <td style="color:var(--blue)">${b.gasBoll!==null?euro(b.gasBoll):'—'}</td>
-      <td>${b.gasSmc!==null?Math.round(b.gasSmc):'—'}</td>
-      <td>${b.gasRatio!==null?b.gasRatio.toFixed(4):'—'}</td>
-      <td class="${gsc!==null?sgn(gsc):''}">${gsc!==null?(gsc>=0?'+':'')+euro(gsc):'—'}</td>
-      <td style="color:var(--yellow)">${b.eneBoll!==null?euro(b.eneBoll):'—'}</td>
-      <td>${b.eneKwh!==null?Math.round(b.eneKwh):'—'}</td>
-      <td>${b.eneRatio!==null?b.eneRatio.toFixed(4):'—'}</td>
-      <td class="${esc!==null?sgn(esc):''}">${esc!==null?(esc>=0?'+':'')+euro(esc):'—'}</td>
-      <td style="font-weight:600;color:var(--text)">${euro(tot)}</td>
-    </tr>`;
+    const y = Y[b.anno] = Y[b.anno] || { n: 0, tot: 0, materia: 0, fissa: 0, rete: 0, oneri: 0, sconti: 0, altro: 0, imposte: 0, iva: 0, canone: 0, cons: 0, nc: 0, mat_c: 0, tot_c: 0 };
+    y.n += b.n; y.tot += b.tot; ['materia', 'fissa', 'rete', 'oneri', 'sconti', 'altro', 'imposte', 'iva', 'canone'].forEach(k => y[k] += b[k]);
+    if (b.cons > 0) { y.cons += b.cons; y.nc += b.n; y.mat_c += b.materia; y.tot_c += b.tot; }
   });
-  // Totals row
-  const gSum = bills.reduce((s,b)=>s+(b.gasBoll||0),0);
-  const eSum = bills.reduce((s,b)=>s+(b.eneBoll||0),0);
-  h += `<tr class="rF">
-    <td colspan="2" style="text-align:left">TOTALE PERIODO</td>
-    <td>${euro(gSum)}</td><td></td><td></td><td></td>
-    <td>${euro(eSum)}</td><td></td><td></td><td></td>
-    <td>${euro(gSum+eSum)}</td>
-  </tr>`;
-  document.getElementById('t-bills').innerHTML = h + '</tbody>';
+  return Y;
 }
-
-function buildTableGas(E) {
-  const yrs = SEL_ENE === 'all' ? E.annYears : E.annYears.filter(y=>y===SEL_ENE);
-  const gi  = yrs.map(y=>E.annYears.indexOf(y));
-  const rows = [
-    ['Spese Materia',     E.gasSpesaMateria, ''],
-    ['— Sconto',          E.gasSconto,       '', 'signed'],
-    ['Trasporto',         E.gasTrasporto,    ''],
-    ['Oneri',             E.gasOneri,        ''],
-    ['Altro / Voltura',   E.gasAltro,        ''],
-    ['Imposte',           E.gasImposte,      ''],
-    ['IVA',               E.gasIva,          ''],
-    ['TOTALE GAS',        E.gasTotale,       'rF'],
-    ['─', null, ''],
-    ['Costo Mensile Medio', E.gasMensile,    'rT'],
-    ['Consumo Smc/anno',  E.gasSmc,          '', 'raw'],
-    ['Prezzo €/Smc',      E.gasEuroSmc,      '', 'dec4'],
+function buildChartEneComp(X) {
+  kill('enec');
+  const Y = eneByYear(X.bills), yrs = Object.keys(Y).map(Number).sort((a, b) => a - b).filter(y => Y[y].tot > 0);
+  const note = document.getElementById('ene-comp-note');
+  if (!yrs.length) { note.textContent = ''; return; }
+  const seg = [
+    ['Materia (al netto di sconti)', '#58a6ff', y => Y[y].materia + Y[y].sconti],
+    ['Quota fissa del fornitore', '#bc8cff', y => Y[y].fissa],
+    ['Trasporto e oneri di sistema', '#e3b341', y => Y[y].rete + Y[y].oneri + Y[y].altro],
+    ['Imposte e IVA', '#f78166', y => Y[y].imposte + Y[y].iva]
   ];
-  let h=`<thead><tr><th>Voce Gas</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
-  rows.forEach(([l,a,c,f])=>{
-    if(!a){h+=`<tr><td colspan="${yrs.length+1}" style="padding:3px 16px;border:none"><hr style="border-color:var(--border)"></td></tr>`;return;}
-    h+=`<tr class="${c}"><td>${l}</td>`;
-    gi.forEach(i=>{const v=i>=0?a[i]:0;let d='',vc='';
-      if(f==='signed'){d=(v>=0?'+':'')+euro(v);vc=sgn(v);}
-      else if(f==='raw'){d=v?Math.round(v):'—';}
-      else if(f==='dec4'){d=v!=null?(v.toFixed(4)+' €'):'—';}
-      else d=euro(v);
-      h+=`<td class="${vc}">${d}</td>`;});
-    h+='</tr>';
-  });
-  document.getElementById('t-gas').innerHTML=h+'</tbody>';
+  if (X.forn === 'Luce') seg.push(['Canone TV', '#8b949e', y => Y[y].canone]);
+  const den = y => seg.reduce((s, g) => s + g[2](y), 0);
+  const sets = seg.map(g => ({ label: g[0], backgroundColor: g[1], data: yrs.map(y => Math.max(0, g[2](y)) / den(y) * 100) }));
+  const o = eneOpts(v => v + '%');
+  o.scales.x.stacked = true; o.scales.y.stacked = true; o.scales.y.max = 100;
+  o.plugins.tooltip = { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1).replace('.', ',')}%` } };
+  CH.enec = new Chart(document.getElementById('ch-ene-comp'), { type: 'bar', data: { labels: yrs.map(String), datasets: sets }, options: o });
+  const full = yrs.filter(y => Y[y].n >= 11).pop() || yrs[yrs.length - 1];
+  const sup = (Y[full].materia + Y[full].sconti + Y[full].fissa) / den(full);
+  note.innerHTML = `Nel ${full} la parte che dipende dal contratto con il fornitore (materia + quota fissa) è stata il <b>${(sup * 100).toFixed(0)}%</b> della bolletta: il resto è trasporto, oneri e tasse, uguali per tutti i fornitori.`;
 }
-
-function buildTableEne(E) {
-  const yrs = SEL_ENE === 'all' ? E.annYears : E.annYears.filter(y=>y===SEL_ENE);
-  const gi  = yrs.map(y=>E.annYears.indexOf(y));
-  const rows = [
-    ['Spese Materia',     E.eneSpesaMateria, ''],
-    ['— Sconto',          E.eneSconto,       '', 'signed'],
-    ['Trasporto/Vendita', E.eneTrasporto,    ''],
-    ['Oneri',             E.eneOneri,        ''],
-    ['Altro / Voltura',   E.eneAltro,        ''],
-    ['Imposte',           E.eneImposte,      ''],
-    ['IVA',               E.eneIva,          ''],
-    ['Canone',            E.eneCanone,       ''],
-    ['TOTALE ENERGIA',    E.eneTotale,       'rF'],
-    ['─', null, ''],
-    ['Costo Mensile Medio', E.eneMensile,    'rT'],
-    ['Consumo kWh/anno',  E.eneTotKw,        '', 'raw'],
-    ['— di cui F1',       E.eneF1,           '', 'raw'],
-    ['— di cui F2/3',     E.eneF23,          '', 'raw'],
-    ['Prezzo €/kWh',      E.eneEuroKwh,      '', 'dec4'],
-  ];
-  let h=`<thead><tr><th>Voce Energia</th>${yrs.map(y=>`<th>${y}</th>`).join('')}</tr></thead><tbody>`;
-  rows.forEach(([l,a,c,f])=>{
-    if(!a){h+=`<tr><td colspan="${yrs.length+1}" style="padding:3px 16px;border:none"><hr style="border-color:var(--border)"></td></tr>`;return;}
-    h+=`<tr class="${c}"><td>${l}</td>`;
-    gi.forEach(i=>{const v=i>=0?a[i]:0;let d='',vc='';
-      if(f==='signed'){d=(v>=0?'+':'')+euro(v);vc=sgn(v);}
-      else if(f==='raw'){d=v?Math.round(v):'—';}
-      else if(f==='dec4'){d=v!=null?(v.toFixed(4)+' €'):'—';}
-      else d=euro(v);
-      h+=`<td class="${vc}">${d}</td>`;});
-    h+='</tr>';
+function buildTablesEne(X) {
+  const unit = ENE_META[X.forn].unit;
+  const Y = eneByYear(X.bills), yrs = Object.keys(Y).map(Number).sort((a, b) => a - b).filter(y => Y[y].n > 0);
+  const th = (t, l) => `<th${l ? '' : ' style="text-align:right"'}>${t}</th>`;
+  let h = `<thead><tr>${th('Anno', 1)}${th('Costo al mese')}${th('Consumo al mese (' + unit + ')')}${th('Prezzo materia €/' + unit)}${th('Costo per ' + unit)}${th('Costo al mese vs anno prima')}</tr></thead><tbody>`;
+  let prev = null;
+  yrs.forEach(y => {
+    const r = Y[y], cm = r.tot / r.n, km = r.nc ? r.cons / r.nc : null, pr = r.cons ? r.mat_c / r.cons : null, un = r.cons ? r.tot_c / r.cons : null;
+    const d = prev ? cm / prev - 1 : null;
+    const part = (r.n < 11) ? ' <span style="color:var(--faint)">(parziale)</span>' : '';
+    h += `<tr><td>${y}${part}</td><td style="text-align:right">${eur2(cm)}</td><td style="text-align:right">${km ? fN(km, 0) : '—'}</td><td style="text-align:right">${fN(pr, 4)}</td><td style="text-align:right">${fN(un, 3)}</td><td class="${d === null ? '' : d <= 0 ? 'up' : 'dn'}" style="text-align:right">${d === null ? '—' : fP(d)}</td></tr>`;
+    prev = cm;
   });
-  document.getElementById('t-ene').innerHTML=h+'</tbody>';
+  document.getElementById('t-ene-years').innerHTML = h + '</tbody>';
+  document.getElementById('ene-year-note').textContent = X.forn === 'Luce' ? 'Costo senza canone TV' : '';
+  // ultime bollette
+  const last = X.bills.slice(-8).reverse();
+  let t = `<thead><tr>${th('Periodo', 1)}${th('Consumo (' + unit + ')')}${th('Costo')}${th('Prezzo materia €/' + unit)}${th('Costo vs anno prima')}${th('Costo per ' + unit + ' vs anno prima')}</tr></thead><tbody>`;
+  last.forEach(b => {
+    const cur = eneWin(X.S, b.k0, b.k1), old = eneWin(X.S, b.k0 - 12, b.k1 - 12), c = eneCompare(cur, old);
+    const cls = v => v === null ? '' : v <= 0 ? 'up' : 'dn';
+    t += `<tr><td>${periodLabel(b)}${b.oper && b.oper !== 'n.d.' ? ' <span style="color:var(--faint)">· ' + b.oper + '</span>' : ''}</td><td style="text-align:right">${b.cons ? fN(b.cons, 0) : '—'}</td><td style="text-align:right">${eur2(b.tot)}</td>` +
+      `<td style="text-align:right">${fN(b.prezzo, 4)}</td><td class="${c ? cls(c.dCost) : ''}" style="text-align:right">${c ? fP(c.dCost) : '—'}</td><td class="${c ? cls(c.dUnit) : ''}" style="text-align:right">${c ? fP(c.dUnit) : '—'}</td></tr>`;
+  });
+  document.getElementById('t-ene-bills').innerHTML = t + '</tbody>';
+  const bon = last.filter(b => b.sconti <= -5 && X.curSet && X.curSet.has(b));
+  document.getElementById('ene-bills-note').textContent = 'Confronto con gli stessi mesi dell\'anno scorso' + (bon.length ? ' · ' + bon.map(b => `${periodLabel(b)}: include uno sconto/bonus una tantum di ${eur2(b.sconti)}`).join('; ') : '');
 }
 
 // ══════════════════════════════════════════════════════
